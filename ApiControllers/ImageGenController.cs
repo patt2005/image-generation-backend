@@ -13,17 +13,10 @@ public class ImageGenController : ControllerBase
         using var reader = new StreamReader(Request.Body, Encoding.UTF8);
         var requestBody = await reader.ReadToEndAsync();
         
+        Console.WriteLine("---------------------------------------");
         Console.WriteLine(requestBody);
+        Console.WriteLine("---------------------------------------");
         
-        return Ok("Server has received the request");
-    }
-
-    [HttpGet("test")]
-    public async Task<IActionResult> Test()
-    {
-        Console.WriteLine("---------------------------------------");
-        Console.WriteLine("Hello World!");
-        Console.WriteLine("---------------------------------------");
         return Ok("Server has received the request");
     }
 }
