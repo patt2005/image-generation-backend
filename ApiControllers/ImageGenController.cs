@@ -17,4 +17,13 @@ public class ImageGenController : ControllerBase
         
         return Ok("Server has received the request");
     }
+
+    [HttpGet("test")]
+    public async Task<IActionResult> Test()
+    {
+        Console.WriteLine("---------------------------------------");
+        Console.WriteLine("Hello World!");
+        Console.WriteLine("---------------------------------------");
+        return Ok("Server has received the request");
+    }
 }
