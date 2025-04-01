@@ -22,7 +22,7 @@ public class ImageGenController : ControllerBase
     }
 
     [HttpPost("generate-headshot")]
-    public async Task<IActionResult> GenerateHeadshot([FromQuery] Guid userId, [FromQuery] string prompt, [FromQuery] int presetCategory)
+    public async Task<IActionResult> GenerateHeadshot([FromQuery] Guid userId, [FromQuery] string prompt, [FromQuery] string presetCategory)
     {
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
@@ -59,7 +59,9 @@ public class ImageGenController : ControllerBase
             UserId = userId,
             Images = "[]",
             HasShownPhotos = false,
-            PresetCategory = (PresetCategory)presetCategory
+            PresetCategory = Enum.TryParse<PresetCategory>(presetCategory, true, out var parsedCategory)
+                ? parsedCategory
+                : PresetCategory.Headshots
         };
 
         await _dbContext.ImageJobs.AddAsync(job);
