@@ -36,7 +36,7 @@ public class ImageGenController : ControllerBase
         var values = new Dictionary<string, string>
         {
             {"prompt[text]", $"<lora:{user.TuneId}:1> {prompt}"},
-            {"prompt[callback]", $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/on-image-generated?userId={user.TuneId}"}
+            {"prompt[callback]", $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/on-image-generated?userId={user.Id}"}
         };
 
         var content = new FormUrlEncodedContent(values);
@@ -47,10 +47,6 @@ public class ImageGenController : ControllerBase
         var response = await httpClient.PostAsync(apiUrl, content);
 
         var responseBody = await response.Content.ReadAsStringAsync();
-
-        Console.WriteLine("-------------------------------------------");
-        Console.WriteLine(responseBody);
-        Console.WriteLine("-------------------------------------------");
         
         try
         {
