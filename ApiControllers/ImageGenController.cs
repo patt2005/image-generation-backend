@@ -48,30 +48,33 @@ public class ImageGenController : ControllerBase
 
         var responseBody = await response.Content.ReadAsStringAsync();
 
-        Console.WriteLine("--------------------------------------------");
-        Console.WriteLine(responseBody);
-        Console.WriteLine("--------------------------------------------");
-        
-        var jobInfo = JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
-
-        var job = new Job
+        try
         {
-            Id = jobInfo.Id,
-            CreationDate = jobInfo.CreatedAt,
-            Status = JobStatus.Processing,
-            SystemPrompt = jobInfo.Text,
-            UserId = userId,
-            Images = "[]",
-            HasShownPhotos = false,
-            PresetCategory = Enum.TryParse<PresetCategory>(presetCategory, true, out var parsedCategory)
-                ? parsedCategory
-                : PresetCategory.Headshots
-        };
+            var jobInfo = JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
 
-        await _dbContext.ImageJobs.AddAsync(job);
-        await _dbContext.SaveChangesAsync();
-        
-        return Ok(job);
+            var job = new Job
+            {
+                Id = jobInfo.Id,
+                CreationDate = jobInfo.CreatedAt,
+                Status = JobStatus.Processing,
+                SystemPrompt = jobInfo.Text,
+                UserId = userId,
+                Images = "[]",
+                HasShownPhotos = false,
+                PresetCategory = Enum.TryParse<PresetCategory>(presetCategory, true, out var parsedCategory)
+                    ? parsedCategory
+                    : PresetCategory.Headshots
+            };
+
+            await _dbContext.ImageJobs.AddAsync(job);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(job);
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     [HttpPost("on-image-generated")]
