@@ -48,6 +48,10 @@ public class ImageGenController : ControllerBase
 
         var responseBody = await response.Content.ReadAsStringAsync();
 
+        Console.WriteLine("-------------------------------------------");
+        Console.WriteLine(responseBody);
+        Console.WriteLine("-------------------------------------------");
+        
         try
         {
             var jobInfo = JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
