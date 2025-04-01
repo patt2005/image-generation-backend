@@ -17,13 +17,12 @@ public class ImageGenController : ControllerBase
 
     public ImageGenController(AppDbContext dbContext)
     {
-        // _apiKey = Environment.GetEnvironmentVariable("API_KEY");
-        _apiKey = "sd_nG25DtGmnYSKS4FW7d7fkH5Wo1vFg1";
+        _apiKey = Environment.GetEnvironmentVariable("AstriaAiApiKey");
         _dbContext = dbContext;
     }
 
     [HttpPost("generate-headshot")]
-    public async Task<IActionResult> GenerateHeadshot([FromQuery] Guid userId, [FromQuery] string prompt)
+    public async Task<IActionResult> GenerateHeadshot([FromQuery] Guid userId, [FromQuery] string prompt, [FromQuery] int presetCategory)
     {
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
@@ -59,12 +58,14 @@ public class ImageGenController : ControllerBase
             SystemPrompt = jobInfo.Text,
             UserId = userId,
             Images = "[]",
+            HasShownPhotos = false,
+            PresetCategory = (PresetCategory)presetCategory
         };
 
         await _dbContext.ImageJobs.AddAsync(job);
         await _dbContext.SaveChangesAsync();
         
-        return StatusCode((int)response.StatusCode, responseBody);
+        return Ok(job);
     }
 
     [HttpPost("on-image-generated")]

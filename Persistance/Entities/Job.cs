@@ -18,4 +18,8 @@ public class Job
     public DateTime CreationDate { get; set; }
     [Column("images")]
     public string Images { get; set; }
+    [Column("has-shown-photos")]
+    public bool HasShownPhotos { get; set; }
+    [Column("preset-category")]
+    public PresetCategory PresetCategory { get; set; }
 }

@@ -19,13 +19,6 @@ public class UserController : ControllerBase
     {
         _dbContext = dbContext;
     }
-
-    [HttpGet("test")]
-    public async Task<IActionResult> GetAll()
-    {
-        var users = await _dbContext.Users.ToListAsync();
-        return Ok(users);
-    }
     
     [HttpPost("register-user")]
     public async Task<IActionResult> RegisterUser()

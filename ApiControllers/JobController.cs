@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoAiBackend.Persistance;
+using PhotoAiBackend.Persistance.Entities;
 
 namespace PhotoAiBackend.ApiControllers;
 
