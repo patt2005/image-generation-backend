@@ -80,7 +80,9 @@ public class ImageGenController : ControllerBase
     [HttpPost("on-image-generated")]
     public async Task<IActionResult> OnImageGenerated([FromQuery] Guid userId)
     {
-        var requestBody = JsonSerializer.Deserialize<ImageGenerationCallbackPayload>(Request.Body);
+        using var reader = new StreamReader(Request.Body);
+        var body = await reader.ReadToEndAsync();
+        var requestBody = JsonSerializer.Deserialize<ImageGenerationCallbackPayload>(body);
 
         var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
