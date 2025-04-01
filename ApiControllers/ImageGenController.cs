@@ -47,6 +47,10 @@ public class ImageGenController : ControllerBase
         var response = await httpClient.PostAsync(apiUrl, content);
 
         var responseBody = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine("--------------------------------------------");
+        Console.WriteLine(responseBody);
+        Console.WriteLine("--------------------------------------------");
         
         var jobInfo = JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
 
