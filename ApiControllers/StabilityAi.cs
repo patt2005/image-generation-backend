@@ -25,15 +25,20 @@ public class StabilityAi : ControllerBase
 
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/*"));
-        
+
         var content = new MultipartFormDataContent();
-        
+
         var imageContent = new StreamContent(image.OpenReadStream());
         imageContent.Headers.ContentType = new MediaTypeHeaderValue(image.ContentType);
-        content.Add(imageContent, "image", image.FileName);
-        
+        imageContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+        {
+            Name = "\"image\"",
+            FileName = $"\"{image.FileName}\""
+        };
+        content.Add(imageContent);
+
         content.Add(new StringContent(outputFormat), "output_format");
-        
+
         var response = await httpClient.PostAsync("https://api.stability.ai/v2beta/stable-image/upscale/fast", content);
 
         if (!response.IsSuccessStatusCode)
