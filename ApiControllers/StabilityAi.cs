@@ -21,25 +21,26 @@ public class StabilityAi : ControllerBase
         if (image == null || image.Length == 0)
             return BadRequest("No image uploaded.");
 
-        using var httpClient = new HttpClient();
-
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("image/*"));
-
-        var content = new MultipartFormDataContent();
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://api.stability.ai/v2beta/stable-image/upscale/fast");
+        var boundary = "Boundary-" + Guid.NewGuid();
+        var content = new MultipartFormDataContent(boundary);
 
         var imageContent = new StreamContent(image.OpenReadStream());
-        imageContent.Headers.ContentType = new MediaTypeHeaderValue(image.ContentType);
-        imageContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
-        {
-            Name = "\"image\"",
-            FileName = $"\"{image.FileName}\""
-        };
-        content.Add(imageContent);
+        imageContent.Headers.ContentType = new MediaTypeHeaderValue(image.ContentType ?? "image/jpeg");
 
-        content.Add(new StringContent(outputFormat), "output_format");
+        imageContent.Headers.TryAddWithoutValidation("Content-Disposition", $"form-data; name=image; filename={image.FileName}");
+        content.Add(imageContent, "image");
 
-        var response = await httpClient.PostAsync("https://api.stability.ai/v2beta/stable-image/upscale/fast", content);
+        var formatContent = new StringContent(outputFormat);
+        formatContent.Headers.TryAddWithoutValidation("Content-Disposition", "form-data; name=output_format");
+        content.Add(formatContent, "output_format");
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("image/*"));
+        request.Content = content;
+
+        using var client = new HttpClient();
+        var response = await client.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
         {
