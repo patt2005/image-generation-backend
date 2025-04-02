@@ -30,4 +30,20 @@ public class JobController : ControllerBase
         
         return Ok(jobs);
     }
+
+    [HttpPost("mark-as-saved")]
+    public async Task<IActionResult> MarkAsSaved([FromQuery] int jobId)
+    {
+        var foundJob = _dbContext.ImageJobs.FirstOrDefault(j => j.Id == jobId);
+
+        if (foundJob == null)
+        {
+            return NotFound("Job not found");
+        }
+        
+        foundJob.HasShownPhotos = true;
+        await _dbContext.SaveChangesAsync();
+        
+        return Ok("Saved");
+    }
 }
