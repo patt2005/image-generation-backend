@@ -22,21 +22,29 @@ public class StabilityAi : ControllerBase
             return BadRequest("No image uploaded.");
 
         var request = new HttpRequestMessage(HttpMethod.Post, "https://api.stability.ai/v2beta/stable-image/upscale/fast");
-        var boundary = "Boundary-" + Guid.NewGuid();
-        var content = new MultipartFormDataContent(boundary);
 
+        var content = new MultipartFormDataContent(); // Do not set boundary manually!
+
+        // Required image field
         var imageContent = new StreamContent(image.OpenReadStream());
         imageContent.Headers.ContentType = new MediaTypeHeaderValue(image.ContentType ?? "image/jpeg");
-
-        imageContent.Headers.TryAddWithoutValidation("Content-Disposition", $"form-data; name=image; filename={image.FileName}");
+        imageContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+        {
+            Name = "image",        
+            FileName = image.FileName
+        };
         content.Add(imageContent, "image");
-
+        
         var formatContent = new StringContent(outputFormat);
-        formatContent.Headers.TryAddWithoutValidation("Content-Disposition", "form-data; name=output_format");
         content.Add(formatContent, "output_format");
-
+        
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("image/*"));
+        
+        request.Headers.Add("stability-client-id", "face-ai-app");
+        request.Headers.Add("stability-client-version", "1.0.0");
+        request.Headers.Add("stability-client-user-id", "user@codbun");
+
         request.Content = content;
 
         using var client = new HttpClient();
@@ -48,9 +56,9 @@ public class StabilityAi : ControllerBase
             return StatusCode((int)response.StatusCode, error);
         }
 
-        var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/webp";
-        var responseImage = await response.Content.ReadAsByteArrayAsync();
+        var imageData = await response.Content.ReadAsByteArrayAsync();
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/png";
 
-        return File(responseImage, contentType);
+        return File(imageData, contentType);
     }
 }
