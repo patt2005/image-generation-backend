@@ -18,8 +18,14 @@ public class ReplicateController : ControllerBase
 
     public ReplicateController(AppDbContext dbContext)
     {
-        _dbContext = dbContext;
         _apiKey = Environment.GetEnvironmentVariable("ReplicateApiKey");
+        _dbContext = dbContext;
+    }
+
+    [HttpGet("test")]
+    public async Task<IActionResult> Test()
+    {
+        return Ok(_apiKey);
     }
     
     [HttpPost("upload-image")]
