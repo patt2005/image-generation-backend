@@ -10,5 +10,6 @@ public class AppDbContext : DbContext
         : base(options) { }
 
     public DbSet<User> Users { get; set; }
-    public DbSet<Job> ImageJobs { get; set; }
+    public DbSet<ImageJob> ImageJobs { get; set; }
+    public DbSet<EnhanceJob> EnhanceJobs { get; set; }
 }

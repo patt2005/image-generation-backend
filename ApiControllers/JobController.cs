@@ -30,20 +30,19 @@ public class JobController : ControllerBase
         
         return Ok(jobs);
     }
-
-    [HttpPost("mark-as-saved")]
-    public async Task<IActionResult> MarkAsSaved([FromQuery] int jobId)
+    
+    [HttpGet("list-enhance-jobs")]
+    public async Task<IActionResult> GetEnhanceJobs([FromQuery] Guid userId)
     {
-        var foundJob = _dbContext.ImageJobs.FirstOrDefault(j => j.Id == jobId);
-
-        if (foundJob == null)
+        var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        
+        if (foundUser == null)
         {
-            return NotFound("Job not found");
+            return NotFound();
         }
         
-        foundJob.HasShownPhotos = true;
-        await _dbContext.SaveChangesAsync();
+        var jobs = _dbContext.EnhanceJobs.Where(j => j.UserId == userId);
         
-        return Ok("Saved");
+        return Ok(jobs);
     }
 }

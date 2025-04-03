@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace PhotoAiBackend.Persistance.Entities;
 
 [Table("image-jobs")]
-public class Job
+public class ImageJob
 {
     [Column("id")]
     public int Id { get; set; }
@@ -18,8 +18,6 @@ public class Job
     public DateTime CreationDate { get; set; }
     [Column("images")]
     public string Images { get; set; }
-    [Column("has-shown-photos")]
-    public bool HasShownPhotos { get; set; }
     [Column("preset-category")]
     public PresetCategory PresetCategory { get; set; }
 }

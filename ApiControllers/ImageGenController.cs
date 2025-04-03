@@ -52,7 +52,7 @@ public class ImageGenController : ControllerBase
         {
             var jobInfo = JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
 
-            var job = new Job
+            var job = new ImageJob
             {
                 Id = jobInfo.Id,
                 CreationDate = jobInfo.CreatedAt,
@@ -60,7 +60,6 @@ public class ImageGenController : ControllerBase
                 SystemPrompt = jobInfo.Text,
                 UserId = userId,
                 Images = "[]",
-                HasShownPhotos = false,
                 PresetCategory = Enum.TryParse<PresetCategory>(presetCategory, true, out var parsedCategory)
                     ? parsedCategory
                     : PresetCategory.Headshots
