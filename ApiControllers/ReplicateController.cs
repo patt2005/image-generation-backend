@@ -21,12 +21,6 @@ public class ReplicateController : ControllerBase
         _apiKey = Environment.GetEnvironmentVariable("ReplicateApiKey");
         _dbContext = dbContext;
     }
-
-    [HttpGet("test")]
-    public async Task<IActionResult> Test()
-    {
-        return Ok(_apiKey);
-    }
     
     [HttpPost("upload-image")]
     public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
@@ -77,31 +71,31 @@ public class ReplicateController : ControllerBase
     {
         var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
+        var body = await new StreamReader(Request.Body).ReadToEndAsync();
+        var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body);
+        
         if (foundUser == null)
         {
             return NotFound("User not found.");
         }
         
-        var body = await new StreamReader(Request.Body).ReadToEndAsync();
-        var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body);
-
         if (result == null)
         {
             return BadRequest("Failed to parse response.");
         }
 
-        var enhanceJob = new EnhanceJob
+        var foundJob = await _dbContext.EnhanceJobs.FirstOrDefaultAsync(j => j.Id == result.Id);
+
+        if (foundJob == null)
         {
-            Id = result.Id,
-            Status = Enum.TryParse<EnhanceStatus>(result.Status, true, out var parsedStatus)
-                ? parsedStatus
-                : EnhanceStatus.Failed,
-            CreatedAt = result.CreatedAt,
-            Output = JsonSerializer.Serialize(result.Output),
-            UserId = userId
-        };
+            return NotFound("Job not found.");
+        }
+
+        foundJob.Status = Enum.TryParse<EnhanceStatus>("processing", true, out var status)
+            ? status
+            : EnhanceStatus.Successful;
+        foundJob.Output = result.Output.First();
         
-        await _dbContext.EnhanceJobs.AddAsync(enhanceJob);
         await _dbContext.SaveChangesAsync();
         
         return Ok("The message was received.");
@@ -141,10 +135,27 @@ public class ReplicateController : ControllerBase
             var response = await httpClient.PostAsync(replicateApiUrl, content);
             var responseBody = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode)
-                return StatusCode((int)response.StatusCode, responseBody);
+            var body = await new StreamReader(responseBody).ReadToEndAsync();
+            var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body);
 
-            return Ok(JsonDocument.Parse(responseBody));
+            if (result == null)
+            {
+                return BadRequest("Failed to parse response.");
+            }
+
+            var enhanceJob = new EnhanceJob
+            {
+                Id = result.Id,
+                Status = EnhanceStatus.Processing,
+                CreatedAt = result.CreatedAt,
+                Output = JsonSerializer.Serialize(result.Output),
+                UserId = userId
+            };
+            
+            await _dbContext.EnhanceJobs.AddAsync(enhanceJob);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(enhanceJob);
         }
         catch (Exception ex)
         {
