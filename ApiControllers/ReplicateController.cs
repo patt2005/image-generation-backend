@@ -92,14 +92,23 @@ public class ReplicateController : ControllerBase
             return NotFound("Job not found.");
         }
 
-        foundJob.Status = Enum.TryParse<EnhanceStatus>("processing", true, out var status)
-            ? status
-            : EnhanceStatus.Successful;
-        foundJob.Output = result.Output.First();
+        try
+        {
+            string serializedResult = JsonSerializer.Serialize(result.Output);
+
+            foundJob.Output = serializedResult;
+            foundJob.Status = Enum.TryParse<EnhanceStatus>(result.Status, true, out var status)
+                ? status
+                : EnhanceStatus.Successful;
+            
+            await _dbContext.SaveChangesAsync();
         
-        await _dbContext.SaveChangesAsync();
-        
-        return Ok("The message was received.");
+            return Ok("The message was received.");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
     }
     
     [HttpPost("create-prediction")]
@@ -153,13 +162,15 @@ public class ReplicateController : ControllerBase
             {
                 return BadRequest("❌ Failed to parse response body.");
             }
-
+            
+            string serializedOutput = JsonSerializer.Serialize(new List<string>());
+            
             var enhanceJob = new EnhanceJob
             {
                 Id = result.Id,
                 Status = EnhanceStatus.Processing,
                 CreatedAt = result.CreatedAt,
-                Output = JsonSerializer.Serialize(result.Output),
+                Output = serializedOutput,
                 UserId = userId
             };
             
