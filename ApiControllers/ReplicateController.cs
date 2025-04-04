@@ -73,7 +73,15 @@ public class ReplicateController : ControllerBase
         var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         var body = await new StreamReader(Request.Body).ReadToEndAsync();
-        var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body);
+
+        Console.WriteLine("----------------------------------------");
+        Console.WriteLine(body);
+        Console.WriteLine("----------------------------------------");
+        
+        var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
         
         if (foundUser == null)
         {
