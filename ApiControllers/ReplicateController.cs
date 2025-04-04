@@ -66,6 +66,20 @@ public class ReplicateController : ControllerBase
             return StatusCode(500, ex.Message);
         }
     }
+    
+    private async Task<byte[]> DownloadImageAsync(string imageUrl)
+    {
+        using var httpClient = new HttpClient();
+    
+        var response = await httpClient.GetAsync(imageUrl);
+    
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new Exception($"Failed to fetch image. Status: {response.StatusCode}");
+        }
+
+        return await response.Content.ReadAsByteArrayAsync();
+    }
 
     [HttpPost("on-prediction-complete")]
     public async Task<IActionResult> OnPredictionComplete([FromQuery] Guid userId)
@@ -73,10 +87,6 @@ public class ReplicateController : ControllerBase
         var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         var body = await new StreamReader(Request.Body).ReadToEndAsync();
-
-        Console.WriteLine("----------------------------------------");
-        Console.WriteLine(body);
-        Console.WriteLine("----------------------------------------");
         
         var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body, new JsonSerializerOptions
         {
@@ -88,7 +98,7 @@ public class ReplicateController : ControllerBase
             return NotFound("User not found.");
         }
         
-        if (result == null)
+        if (result?.Output == null)
         {
             return BadRequest("Failed to parse response.");
         }
@@ -102,13 +112,22 @@ public class ReplicateController : ControllerBase
 
         try
         {
-            string serializedResult = JsonSerializer.Serialize(result.Output);
+            var enhanceImages = new List<EnhanceImage>();
 
-            foundJob.Output = serializedResult;
-            foundJob.Status = Enum.TryParse<EnhanceStatus>(result.Status, true, out var status)
-                ? status
-                : EnhanceStatus.Successful;
+            foreach (var url in result.Output)
+            {
+                var data = await DownloadImageAsync(url);
+
+                enhanceImages.Add(new EnhanceImage
+                {
+                    Id = Guid.NewGuid(),
+                    JobId = foundJob.Id,
+                    Data = data
+                });
+            }
             
+            await _dbContext.EnhanceImages.AddRangeAsync(enhanceImages);
+            foundJob.Status = EnhanceStatus.Successful;
             await _dbContext.SaveChangesAsync();
         
             return Ok("The message was received.");
@@ -123,7 +142,9 @@ public class ReplicateController : ControllerBase
     public async Task<IActionResult> CreatePrediction([FromQuery] string imageUrl, [FromQuery] Guid userId)
     {
         if (string.IsNullOrWhiteSpace(imageUrl))
+        {
             return BadRequest("Missing image URL.");
+        }
 
         try
         {
@@ -171,15 +192,13 @@ public class ReplicateController : ControllerBase
                 return BadRequest("❌ Failed to parse response body.");
             }
             
-            string serializedOutput = JsonSerializer.Serialize(new List<string>());
-            
             var enhanceJob = new EnhanceJob
             {
                 Id = result.Id,
                 Status = EnhanceStatus.Processing,
                 CreatedAt = result.CreatedAt,
-                Output = serializedOutput,
-                UserId = userId
+                UserId = userId,
+                EnhanceImages = []
             };
             
             await _dbContext.EnhanceJobs.AddAsync(enhanceJob);

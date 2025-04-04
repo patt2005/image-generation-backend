@@ -12,4 +12,5 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<ImageJob> ImageJobs { get; set; }
     public DbSet<EnhanceJob> EnhanceJobs { get; set; }
+    public DbSet<EnhanceImage> EnhanceImages { get; set; }
 }

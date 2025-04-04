@@ -11,9 +11,8 @@ public class EnhanceJob
     public EnhanceStatus Status { get; set; }
     [Column("created-at")]
     public DateTime CreatedAt { get; set; }
-    [Column("output")]
-    public string Output { get; set; }
     [Column("user-id")]
     public Guid UserId { get; set; }
     public User? User { get; set; }
+    public List<EnhanceImage> EnhanceImages { get; set; }
 }

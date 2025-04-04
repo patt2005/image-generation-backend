@@ -41,7 +41,9 @@ public class JobController : ControllerBase
             return NotFound();
         }
         
-        var jobs = _dbContext.EnhanceJobs.Where(j => j.UserId == userId);
+        var jobs = _dbContext.EnhanceJobs
+            .Include(j => j.EnhanceImages)
+            .Where(j => j.UserId == userId);
         
         return Ok(jobs);
     }
