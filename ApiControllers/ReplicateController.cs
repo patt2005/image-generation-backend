@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -128,19 +129,29 @@ public class ReplicateController : ControllerBase
                     super_resolution_factor = 2
                 }
             };
-
+            
             var json = JsonSerializer.Serialize(payload);
+            
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await httpClient.PostAsync(replicateApiUrl, content);
+            
+            if (!response.IsSuccessStatusCode || response.StatusCode != HttpStatusCode.Created)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                return StatusCode((int)response.StatusCode, $"❌ Request failed: {error}");
+            }
+            
             var responseBody = await response.Content.ReadAsStringAsync();
-
-            var body = await new StreamReader(responseBody).ReadToEndAsync();
-            var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body);
+            
+            var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(responseBody, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
 
             if (result == null)
             {
-                return BadRequest("Failed to parse response.");
+                return BadRequest("❌ Failed to parse response body.");
             }
 
             var enhanceJob = new EnhanceJob
