@@ -42,7 +42,6 @@ public class JobController : ControllerBase
         }
         
         var jobs = _dbContext.EnhanceJobs
-            .Include(j => j.EnhanceImages)
             .Where(j => j.UserId == userId);
         
         return Ok(jobs);
