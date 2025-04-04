@@ -30,6 +30,14 @@ public class JobController : ControllerBase
         
         return Ok(jobs);
     }
+
+    [HttpGet("list-job-images")]
+    public async Task<IActionResult> GetJobImages([FromQuery] string jobId)
+    {
+        var images = await _dbContext.EnhanceImages.Where(i => i.JobId == jobId).ToListAsync();
+        
+        return Ok(images);
+    }
     
     [HttpGet("list-enhance-jobs")]
     public async Task<IActionResult> GetEnhanceJobs([FromQuery] Guid userId)
