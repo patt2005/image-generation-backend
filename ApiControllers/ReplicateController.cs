@@ -128,7 +128,7 @@ public class ReplicateController : ControllerBase
         try
         {
             var replicateApiUrl = "https://api.replicate.com/v1/predictions";
-            var webhookUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/on-prediction-complete?userId={userId}";
+            var webhookUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/api/replicate/on-prediction-complete?userId={userId}";
 
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
