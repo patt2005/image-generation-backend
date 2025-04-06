@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using PhotoAiBackend.Models;
 using PhotoAiBackend.Persistance;
 using PhotoAiBackend.Persistance.Entities;
+using PhotoAiBackend.Services;
 
 namespace PhotoAiBackend.ApiControllers;
 
@@ -16,11 +18,13 @@ public class ReplicateController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
     private readonly string _apiKey;
+    private INotificationService _notificationService;
 
-    public ReplicateController(AppDbContext dbContext)
+    public ReplicateController(AppDbContext dbContext, INotificationService notificationService)
     {
         _apiKey = Environment.GetEnvironmentVariable("ReplicateApiKey");
         _dbContext = dbContext;
+        _notificationService = notificationService;
     }
     
     [HttpPost("upload-image")]
@@ -129,6 +133,25 @@ public class ReplicateController : ControllerBase
             await _dbContext.EnhanceImages.AddRangeAsync(enhanceImages);
             foundJob.Status = EnhanceStatus.Successful;
             await _dbContext.SaveChangesAsync();
+            
+            var notificationData = new Dictionary<string, string>
+            {
+                { "type", GenerationType.Filter.ToString() },
+                { "jobId", foundJob.Id }
+            };
+
+            IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(notificationData);
+        
+            var notification = new NotificationInfo
+            {
+                Title = "Headshot Ready!",
+                Text = "Your AI-generated headshot is complete. Tap to view your results."
+            };
+        
+            if (foundUser.FcmTokenId != null)
+            {
+                await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
+            }
         
             return Ok("The message was received.");
         }

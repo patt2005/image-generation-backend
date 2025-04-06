@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
@@ -5,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using PhotoAiBackend.Models;
 using PhotoAiBackend.Persistance;
 using PhotoAiBackend.Persistance.Entities;
+using PhotoAiBackend.Services;
 
 namespace PhotoAiBackend.ApiControllers;
 
@@ -14,11 +16,13 @@ public class ImageGenController : ControllerBase
 {
     private readonly string _apiKey;
     private AppDbContext _dbContext;
+    private INotificationService _notificationService;
 
-    public ImageGenController(AppDbContext dbContext)
+    public ImageGenController(AppDbContext dbContext, INotificationService notificationService)
     {
         _apiKey = Environment.GetEnvironmentVariable("AstriaAiApiKey");
         _dbContext = dbContext;
+        _notificationService = notificationService;
     }
 
     [HttpPost("generate-headshot")]
@@ -106,6 +110,25 @@ public class ImageGenController : ControllerBase
         foundJob.Status = JobStatus.Done;
 
         await _dbContext.SaveChangesAsync();
+
+        var data = new Dictionary<string, string>
+        {
+            { "type", GenerationType.Headshot.ToString() },
+            { "jobId", foundJob.Id.ToString() }
+        };
+
+        IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(data);
+        
+        var notification = new NotificationInfo
+        {
+            Title = "Headshot Ready!",
+            Text = "Your AI-generated headshot is complete. Tap to view your results."
+        };
+        
+        if (foundUser.FcmTokenId != null)
+        {
+            await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
+        }
         
         return Ok();
     }

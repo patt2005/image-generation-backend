@@ -1,3 +1,5 @@
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
 using PhotoAiBackend.Persistance;
 
@@ -18,6 +20,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
             errorCodesToAdd: null
         );
     }));
+
+var credentials = Environment.GetEnvironmentVariable("FirebaseAuthCredentials");
+
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromJson(credentials)
+});
 
 builder.Services.AddControllers();
 builder.Services.AddControllersWithViews();

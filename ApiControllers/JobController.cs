@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.EntityFrameworkCore;
 using PhotoAiBackend.Persistance;
 using PhotoAiBackend.Persistance.Entities;
@@ -32,6 +33,21 @@ public class JobController : ControllerBase
     }
 
     [HttpGet("list-job-images")]
+    public async Task<IActionResult> GetJobImages([FromQuery] int jobId)
+    {
+        var foundJob = await _dbContext.ImageJobs.FirstOrDefaultAsync(j => j.Id == jobId);
+
+        if (foundJob == null)
+        {
+            return NotFound("Job not found");
+        }
+
+        var images = foundJob.Images;
+        
+        return Ok(images);
+    }
+
+    [HttpGet("list-enhance-job-images")]
     public async Task<IActionResult> GetJobImages([FromQuery] string jobId)
     {
         var images = await _dbContext.EnhanceImages.Where(i => i.JobId == jobId).ToListAsync();
