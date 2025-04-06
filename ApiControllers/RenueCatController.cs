@@ -37,8 +37,10 @@ public class RenueCatController : ControllerBase
             return NotFound("User not found");
         }
 
+        Console.WriteLine("--------------------------------");
         Console.WriteLine(requestBody.Event.ProductId);
         Console.WriteLine(requestBody.Event.Type);
+        Console.WriteLine("--------------------------------");
         
         return Ok();
     }

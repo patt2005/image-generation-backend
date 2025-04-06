@@ -50,7 +50,10 @@ public class RevenueCatEvent
     public string Id { get; set; }
 
     [JsonPropertyName("is_family_share")]
-    public bool IsFamilyShare { get; set; }
+    public bool? IsFamilyShare { get; set; }
+
+    [JsonPropertyName("metadata")]
+    public object Metadata { get; set; }
 
     [JsonPropertyName("offer_code")]
     public string OfferCode { get; set; }
@@ -68,16 +71,19 @@ public class RevenueCatEvent
     public string PresentedOfferingId { get; set; }
 
     [JsonPropertyName("price")]
-    public double Price { get; set; }
+    public double? Price { get; set; }
 
     [JsonPropertyName("price_in_purchased_currency")]
-    public double PriceInPurchasedCurrency { get; set; }
+    public double? PriceInPurchasedCurrency { get; set; }
 
     [JsonPropertyName("product_id")]
     public string ProductId { get; set; }
 
     [JsonPropertyName("purchased_at_ms")]
-    public long PurchasedAtMs { get; set; }
+    public long? PurchasedAtMs { get; set; }
+
+    [JsonPropertyName("renewal_number")]
+    public int? RenewalNumber { get; set; }
 
     [JsonPropertyName("store")]
     public string Store { get; set; }
