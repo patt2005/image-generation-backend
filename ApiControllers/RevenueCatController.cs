@@ -22,26 +22,46 @@ public class RevenueCatController : ControllerBase
     {
         using var reader = new StreamReader(Request.Body);
         var body = await reader.ReadToEndAsync();
+
         var requestBody = JsonSerializer.Deserialize<RevenueCatWebhookPayload>(body);
 
-        if (requestBody == null)
+        if (requestBody == null || requestBody.Event == null)
         {
-            return BadRequest();
+            return BadRequest("Invalid payload");
         }
         
-        var id = Guid.Parse(requestBody.Event.AppUserId);
-        var foundUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        if (!Guid.TryParse(requestBody.Event.AppUserId, out Guid userId))
+        {
+            return BadRequest("Invalid user ID format");
+        }
+
+        var foundUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         if (foundUser == null)
         {
             return NotFound("User not found");
         }
-
-        Console.WriteLine("--------------------------------");
-        Console.WriteLine(requestBody.Event.ProductId);
-        Console.WriteLine(requestBody.Event.Type);
-        Console.WriteLine("--------------------------------");
         
-        return Ok();
+        var productId = requestBody.Event.ProductId;
+
+        if (string.IsNullOrWhiteSpace(productId))
+        {
+            return BadRequest("Product ID is empty");
+        }
+        
+        switch (productId)
+        {
+            case "com.face.ai.weekly":
+                foundUser.Credits += 200;
+                break;
+            case "com.face.ai.monthly":
+                foundUser.Credits += 1000;
+                break;
+            default:
+                return Ok("Product ID not tracked for credits.");
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok("Credits updated successfully");
     }
 }
