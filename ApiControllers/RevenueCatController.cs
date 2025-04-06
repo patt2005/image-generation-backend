@@ -8,11 +8,11 @@ namespace PhotoAiBackend.ApiControllers;
 
 [ApiController]
 [Route("/api/revenuecat/")]
-public class RenueCatController : ControllerBase
+public class RevenueCatController : ControllerBase
 {
     private readonly AppDbContext _context;
 
-    public RenueCatController(AppDbContext context)
+    public RevenueCatController(AppDbContext context)
     {
         _context = context;
     }

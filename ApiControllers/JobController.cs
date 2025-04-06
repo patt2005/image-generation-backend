@@ -21,14 +21,16 @@ public class JobController : ControllerBase
     public async Task<IActionResult> GetUserImages([FromQuery] Guid userId)
     {
         var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-        
+
         if (foundUser == null)
         {
-            return NotFound();
+            return Ok(new List<ImageJob>());
         }
-        
-        var jobs = _dbContext.ImageJobs.Where(j => j.UserId == userId);
-        
+
+        var jobs = await _dbContext.ImageJobs
+            .Where(j => j.UserId == userId)
+            .ToListAsync();
+
         return Ok(jobs);
     }
 
@@ -39,7 +41,7 @@ public class JobController : ControllerBase
 
         if (foundJob == null)
         {
-            return NotFound("Job not found");
+            return Ok("[]");
         }
 
         var images = foundJob.Images;
@@ -62,11 +64,11 @@ public class JobController : ControllerBase
         
         if (foundUser == null)
         {
-            return NotFound();
+            return Ok(new List<EnhanceJob>());
         }
         
-        var jobs = _dbContext.EnhanceJobs
-            .Where(j => j.UserId == userId);
+        var jobs = await _dbContext.EnhanceJobs
+            .Where(j => j.UserId == userId).ToListAsync();
         
         return Ok(jobs);
     }
