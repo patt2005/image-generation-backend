@@ -13,4 +13,6 @@ public class User
     public string? FcmTokenId { get; set; }
     [Column("gender")]
     public string Gender { get; set; }
+    [Column("credits")]
+    public int Credits { get; set; }
 }

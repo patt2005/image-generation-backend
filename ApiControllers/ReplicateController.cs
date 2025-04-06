@@ -144,8 +144,8 @@ public class ReplicateController : ControllerBase
         
             var notification = new NotificationInfo
             {
-                Title = "Headshot Ready!",
-                Text = "Your AI-generated headshot is complete. Tap to view your results."
+                Title = "Photo Enhanced!",
+                Text = "Your image has been enhanced with AI. Tap to see the improved version."
             };
         
             if (foundUser.FcmTokenId != null)

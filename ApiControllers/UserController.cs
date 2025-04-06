@@ -19,9 +19,32 @@ public class UserController : ControllerBase
     {
         _dbContext = dbContext;
     }
+
+    [HttpGet("get-credits")]
+    public async Task<IActionResult> GetCredits([FromQuery] Guid userId)
+    {
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            var response = new
+            {
+                credits = 0
+            };
+
+            return Ok(response);
+        }
+
+        var result = new
+        {
+            credits = user.Credits
+        };
+            
+        return Ok(result);
+    }
     
     [HttpPost("register-user")]
-    public async Task<IActionResult> RegisterUser()
+    public async Task<IActionResult> RegisterUser([FromQuery] Guid userId)
     {
         try
         {
@@ -37,10 +60,11 @@ public class UserController : ControllerBase
             
             var user = new User
             {
-                Id = Guid.NewGuid(),
+                Id = userId,
                 FcmTokenId = payload.FcmTokenId,
                 Gender = payload.Gender,
                 TuneId = payload.TuneId,
+                Credits = 0
             };
 
             await _dbContext.Users.AddAsync(user);
@@ -51,7 +75,7 @@ public class UserController : ControllerBase
                 userId = user.Id
             };
             
-            return Ok(response);
+            return Ok("User created");
         }
         catch (Exception e)
         {

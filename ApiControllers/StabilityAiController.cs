@@ -1,7 +1,11 @@
+using System.Collections.ObjectModel;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PhotoAiBackend.Models;
 using PhotoAiBackend.Persistance;
 using PhotoAiBackend.Persistance.Entities;
+using PhotoAiBackend.Services;
 
 namespace PhotoAiBackend.ApiControllers;
 
@@ -12,11 +16,13 @@ public class StabilityAiController : ControllerBase
     private readonly string _apiKey;
     private readonly string _apiUrl = "https://api.stability.ai/v2beta/stable-image/upscale/fast";
     private readonly AppDbContext _dbContext;
+    private readonly INotificationService _notificationService;
 
-    public StabilityAiController(AppDbContext dbContext)
+    public StabilityAiController(AppDbContext dbContext, INotificationService notificationService)
     {
         _apiKey = Environment.GetEnvironmentVariable("StabilityAiApiKey");
         _dbContext = dbContext;
+        _notificationService = notificationService;
     }
 
     private byte[] GetFileArray(IFormFile file)
@@ -64,6 +70,7 @@ public class StabilityAiController : ControllerBase
             var imageBytes = await response.Content.ReadAsByteArrayAsync();
             
             var jobId = Guid.NewGuid().ToString();
+            
             var job = new EnhanceJob
             {
                 Id = jobId,
@@ -79,8 +86,36 @@ public class StabilityAiController : ControllerBase
                 Data = imageBytes
             };
             
+            var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (foundUser == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            foundUser.Credits -= 5;
+            
             await _dbContext.AddRangeAsync(job, enhanceImage);
             await _dbContext.SaveChangesAsync();
+
+            if (foundUser.FcmTokenId != null)
+            {
+                var notificationData = new Dictionary<string, string>
+                {
+                    { "type", GenerationType.Filter.ToString() },
+                    { "jobId", jobId }
+                };
+
+                IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(notificationData);
+        
+                var notification = new NotificationInfo
+                {
+                    Title = "Background Removed!",
+                    Text = "Your image background has been successfully removed. Tap to view the result."
+                };
+
+                await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
+            }
             
             return Ok(job);
         }
