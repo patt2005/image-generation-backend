@@ -135,16 +135,6 @@ public class ImageGenController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("on-tune-finish")]
-    public async Task<IActionResult> OnTuneFinish([FromQuery] Guid userId, [FromQuery] string prompt, [FromQuery] string presetCategory)
-    {
-        Console.WriteLine(prompt);
-        Console.WriteLine(userId);
-        Console.WriteLine(presetCategory);
-        
-        return Ok("You finished your tune.");
-    }
-
     [HttpPost("tune-model")]
     public async Task<IActionResult> TuneModel([FromForm] List<IFormFile> images, [FromQuery] string gender, [FromQuery] Guid userId, [FromQuery] string prompt, [FromQuery] string presetCategory)
     {
@@ -164,7 +154,7 @@ public class ImageGenController : ControllerBase
         content.Add(new StringContent("1504944"), "tune[base_tune_id]");
         content.Add(new StringContent("lora"), "tune[model_type]");
         content.Add(new StringContent("fast"), "tune[branch]");
-        content.Add(new StringContent($"https://image-generation-backend-164860087792.us-central1.run.app/api/image/on-tune-finish?userId={userId}&prompt={prompt}&presetCategory={presetCategory}"), "tune[callback]");
+        content.Add(new StringContent($"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?userId={userId}&prompt={prompt}&presetCategory={presetCategory}"), "tune[callback]");
 
         foreach (var image in images)
         {
