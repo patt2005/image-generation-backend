@@ -94,8 +94,9 @@ public class StabilityAiController : ControllerBase
             }
 
             foundUser.Credits -= 5;
-            
-            await _dbContext.AddRangeAsync(job, enhanceImage);
+
+            await _dbContext.EnhanceJobs.AddAsync(job);
+            await _dbContext.EnhanceImages.AddAsync(enhanceImage);
             await _dbContext.SaveChangesAsync();
 
             if (foundUser.FcmTokenId != null)
