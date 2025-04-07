@@ -138,7 +138,7 @@ public class ImageGenController : ControllerBase
     }
 
     [HttpPost("tune-model")]
-    public async Task<IActionResult> TuneModel([FromForm] List<IFormFile> images, [FromForm] string gender, [FromForm] Guid userId, [FromForm] string prompt, [FromForm] string presetCategory)
+    public async Task<IActionResult> TuneModel([FromForm] List<IFormFile> images, [FromForm] string gender, [FromQuery] Guid userId, [FromForm] string prompt, [FromForm] string presetCategory)
     {
         if (!images.Any())
         {
