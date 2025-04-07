@@ -132,6 +132,9 @@ public class ReplicateController : ControllerBase
             
             await _dbContext.EnhanceImages.AddRangeAsync(enhanceImages);
             foundJob.Status = EnhanceStatus.Successful;
+
+            foundUser.Credits -= 10;
+            
             await _dbContext.SaveChangesAsync();
             
             var notificationData = new Dictionary<string, string>

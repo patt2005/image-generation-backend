@@ -109,6 +109,8 @@ public class ImageGenController : ControllerBase
         foundJob.Images = JsonSerializer.Serialize(requestBody.Prompt.Images);
         foundJob.Status = JobStatus.Done;
 
+        foundUser.Credits -= 15;
+
         await _dbContext.SaveChangesAsync();
 
         var data = new Dictionary<string, string>
