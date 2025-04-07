@@ -56,6 +56,8 @@ public class ImageGenController : ControllerBase
         
         try
         {
+            Console.WriteLine(responseBody);
+            
             var jobInfo = JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
 
             var job = new ImageJob
