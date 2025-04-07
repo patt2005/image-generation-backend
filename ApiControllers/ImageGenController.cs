@@ -78,6 +78,9 @@ public class ImageGenController : ControllerBase
         }
         catch (Exception e)
         {
+            Console.WriteLine("-------------------------------------");
+            Console.WriteLine(e.Message);
+            Console.WriteLine("-------------------------------------");
             return BadRequest(e.Message);
         }
     }
