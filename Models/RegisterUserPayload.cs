@@ -4,6 +4,8 @@ namespace PhotoAiBackend.Models;
 
 public class RegisterUserPayload
 {
+    [JsonPropertyName("id")]
+    public Guid Id { get; set; }
     [JsonPropertyName("tuneId")]
     public int TuneId { get; set; }
     

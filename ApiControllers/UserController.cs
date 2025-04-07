@@ -44,7 +44,7 @@ public class UserController : ControllerBase
     }
     
     [HttpPost("register-user")]
-    public async Task<IActionResult> RegisterUser([FromQuery] Guid userId)
+    public async Task<IActionResult> RegisterUser()
     {
         try
         {
@@ -60,7 +60,7 @@ public class UserController : ControllerBase
             
             var user = new User
             {
-                Id = userId,
+                Id = payload.Id,
                 FcmTokenId = payload.FcmTokenId,
                 Gender = payload.Gender,
                 TuneId = payload.TuneId,
