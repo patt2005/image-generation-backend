@@ -37,9 +37,11 @@ public class ImageGenController : ControllerBase
         
         var apiUrl = $"https://api.astria.ai/tunes/1504944/prompts";
 
+        var decodedQuery = Uri.UnescapeDataString(prompt);
+        
         var values = new Dictionary<string, string>
         {
-            {"prompt[text]", $"<lora:{user.TuneId}:1> {prompt}"},
+            {"prompt[text]", $"<lora:{user.TuneId}:1> {decodedQuery}"},
             {"prompt[callback]", $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/on-image-generated?userId={user.Id}"}
         };
 
@@ -136,7 +138,7 @@ public class ImageGenController : ControllerBase
     }
 
     [HttpPost("tune-model")]
-    public async Task<IActionResult> TuneModel([FromForm] List<IFormFile> images, [FromQuery] string gender, [FromQuery] Guid userId, [FromQuery] string prompt, [FromQuery] string presetCategory)
+    public async Task<IActionResult> TuneModel([FromForm] List<IFormFile> images, [FromForm] string gender, [FromForm] Guid userId, [FromForm] string prompt, [FromForm] string presetCategory)
     {
         if (!images.Any())
         {
@@ -154,7 +156,12 @@ public class ImageGenController : ControllerBase
         content.Add(new StringContent("1504944"), "tune[base_tune_id]");
         content.Add(new StringContent("lora"), "tune[model_type]");
         content.Add(new StringContent("fast"), "tune[branch]");
-        content.Add(new StringContent($"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?userId={userId}&prompt={prompt}&presetCategory={presetCategory}"), "tune[callback]");
+        
+        var encodedPrompt = Uri.EscapeDataString(prompt);
+
+        var callbackUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?userId={userId}&prompt={encodedPrompt}&presetCategory={presetCategory}";
+
+        content.Add(new StringContent(callbackUrl), "tune[callback]");
 
         foreach (var image in images)
         {
