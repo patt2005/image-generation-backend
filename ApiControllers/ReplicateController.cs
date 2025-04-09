@@ -91,6 +91,10 @@ public class ReplicateController : ControllerBase
         var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
         var body = await new StreamReader(Request.Body).ReadToEndAsync();
+
+        Console.WriteLine("-----------------------------------------------");
+        Console.WriteLine(body);
+        Console.WriteLine("-----------------------------------------------");
         
         var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body, new JsonSerializerOptions
         {
@@ -149,7 +153,7 @@ public class ReplicateController : ControllerBase
             {
                 Title = "Photo Enhanced!",
                 Text = "Your image has been enhanced with AI. Tap to see the improved version."
-            };
+            };  
         
             if (foundUser.FcmTokenId != null)
             {
@@ -182,15 +186,12 @@ public class ReplicateController : ControllerBase
 
             var payload = new
             {
-                version = "51ed1464d8bbbaca811153b051d3b09ab42f0bdeb85804ae26ba323d7a66a4ac",
+                version = "0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c",
                 webhook = webhookUrl,
                 webhook_events_filter = new[] { "completed" },
                 input = new
                 {
-                    input = imageUrl,
-                    background_upsampler = "DiffBIR",
-                    upscaling_model_type = "faces",
-                    super_resolution_factor = 2
+                    img = imageUrl
                 }
             };
             
