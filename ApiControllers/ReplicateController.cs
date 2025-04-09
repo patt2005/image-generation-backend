@@ -193,7 +193,7 @@ public class ReplicateController : ControllerBase
 
             var payload = new
             {
-                version = "0fbacf7afc6c144e5be9767cff80f25aff23e52b0708f17e20f9879b2f21516c",
+                version = "f121d640bd286e1fdc67f9799164c1d5be36ff74576ee11c803ae5b665dd46aa",
                 webhook = webhookUrl,
                 webhook_events_filter = new[] { "completed" },
                 input = new
