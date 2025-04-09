@@ -199,7 +199,7 @@ public class ReplicateController : ControllerBase
                 input = new
                 {
                     image = imageUrl,
-                    scale = 2
+                    face_enhance = true
                 }
             };
             
