@@ -194,7 +194,8 @@ public class ReplicateController : ControllerBase
                 webhook_events_filter = new[] { "completed" },
                 input = new
                 {
-                    img = imageUrl
+                    image = imageUrl,
+                    scale = 2
                 }
             };
             
