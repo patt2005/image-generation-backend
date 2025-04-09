@@ -89,6 +89,10 @@ public class ReplicateController : ControllerBase
     public async Task<IActionResult> OnPredictionComplete([FromQuery] Guid userId)
     {
         var body = await new StreamReader(Request.Body).ReadToEndAsync();
+
+        Console.WriteLine("-------------------------------");
+        Console.WriteLine(body);
+        Console.WriteLine("-------------------------------");
         
         var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body, new JsonSerializerOptions
         {
