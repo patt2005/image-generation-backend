@@ -88,18 +88,28 @@ public class ReplicateController : ControllerBase
     [HttpPost("on-prediction-complete")]
     public async Task<IActionResult> OnPredictionComplete([FromQuery] Guid userId)
     {
-        var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
         var body = await new StreamReader(Request.Body).ReadToEndAsync();
-
-        Console.WriteLine("-----------------------------------------------");
-        Console.WriteLine(body);
-        Console.WriteLine("-----------------------------------------------");
         
         var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         });
+
+        if (result == null)
+        {
+            return BadRequest("Failed to deserialize payload.");
+        }
+        
+        var foundJob = await _dbContext.EnhanceJobs.FirstOrDefaultAsync(j => j.Id == result.Id);
+
+        if (result.Status != "succeeded")
+        {
+            foundJob.Status = Enum.TryParse(result.Status, out EnhanceStatus status) ? status : EnhanceStatus.Running;
+            
+            return Ok("Status changed to " + result.Status);
+        }
+        
+        var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
         
         if (foundUser == null)
         {
@@ -111,8 +121,6 @@ public class ReplicateController : ControllerBase
             return BadRequest("Failed to parse response.");
         }
 
-        var foundJob = await _dbContext.EnhanceJobs.FirstOrDefaultAsync(j => j.Id == result.Id);
-
         if (foundJob == null)
         {
             return NotFound("Job not found.");
@@ -120,43 +128,38 @@ public class ReplicateController : ControllerBase
 
         try
         {
-            var enhanceImages = new List<EnhanceImage>();
+            var data = await DownloadImageAsync(result.Input.Img);
 
-            foreach (var url in result.Output)
+            var image = new EnhanceImage
             {
-                var data = await DownloadImageAsync(url);
+                Id = Guid.NewGuid(),
+                JobId = foundJob.Id,
+                Data = data
+            };
 
-                enhanceImages.Add(new EnhanceImage
-                {
-                    Id = Guid.NewGuid(),
-                    JobId = foundJob.Id,
-                    Data = data
-                });
-            }
-            
-            await _dbContext.EnhanceImages.AddRangeAsync(enhanceImages);
-            foundJob.Status = EnhanceStatus.Successful;
+            await _dbContext.EnhanceImages.AddAsync(image);
+            foundJob.Status = EnhanceStatus.Succeeded;
 
             foundUser.Credits -= 10;
             
             await _dbContext.SaveChangesAsync();
-            
-            var notificationData = new Dictionary<string, string>
-            {
-                { "type", GenerationType.Filter.ToString() },
-                { "jobId", foundJob.Id }
-            };
-
-            IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(notificationData);
-        
-            var notification = new NotificationInfo
-            {
-                Title = "Photo Enhanced!",
-                Text = "Your image has been enhanced with AI. Tap to see the improved version."
-            };  
         
             if (foundUser.FcmTokenId != null)
             {
+                var notificationData = new Dictionary<string, string>
+                {
+                    { "type", GenerationType.Filter.ToString() },
+                    { "jobId", foundJob.Id }
+                };
+
+                IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(notificationData);
+        
+                var notification = new NotificationInfo
+                {
+                    Title = "Photo Enhanced!",
+                    Text = "Your image has been enhanced with AI. Tap to see the improved version."
+                };  
+                
                 await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
             }
         
@@ -222,7 +225,7 @@ public class ReplicateController : ControllerBase
             var enhanceJob = new EnhanceJob
             {
                 Id = result.Id,
-                Status = EnhanceStatus.Processing,
+                Status = EnhanceStatus.Running,
                 CreatedAt = result.CreatedAt,
                 UserId = userId,
                 EnhanceImages = []

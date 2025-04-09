@@ -8,10 +8,10 @@ public enum EnhanceStatus
 {
     [EnumMember(Value = "starting")]
     Starting,
-    [EnumMember(Value = "processing")]
-    Processing,
-    [EnumMember(Value = "successful")]
-    Successful,
+    [EnumMember(Value = "running")]
+    Running,
+    [EnumMember(Value = "succeeded")]
+    Succeeded,
     [EnumMember(Value = "failed")]
     Failed,
     [EnumMember(Value = "canceled")]

@@ -75,7 +75,7 @@ public class StabilityAiController : ControllerBase
             {
                 Id = jobId,
                 UserId = userId,
-                Status = EnhanceStatus.Successful,
+                Status = EnhanceStatus.Succeeded,
                 CreatedAt = DateTime.UtcNow
             };
             
