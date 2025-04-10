@@ -63,7 +63,7 @@ public class UserController : ControllerBase
                 Id = payload.Id,
                 FcmTokenId = payload.FcmTokenId,
                 Gender = payload.Gender,
-                TuneId = payload.TuneId,
+                TuneId = 0,
                 Credits = 0
             };
 
