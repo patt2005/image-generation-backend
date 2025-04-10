@@ -7,7 +7,7 @@ public class RegisterUserPayload
     [JsonPropertyName("id")]
     public Guid Id { get; set; }
     [JsonPropertyName("tuneId")]
-    public int TuneId { get; set; }
+    public int? TuneId { get; set; }
     
     [JsonPropertyName("gender")]
     public string Gender { get; set; }

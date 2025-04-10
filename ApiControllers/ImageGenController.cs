@@ -157,7 +157,7 @@ public class ImageGenController : ControllerBase
         content.Add(new StringContent("flux-lora-portrait"), "tune[preset]");
         content.Add(new StringContent("1504944"), "tune[base_tune_id]");
         content.Add(new StringContent("lora"), "tune[model_type]");
-        // content.Add(new StringContent("fast"), "tune[branch]");
+        content.Add(new StringContent("fast"), "tune[branch]");
         
         var encodedPrompt = Uri.EscapeDataString(prompt);
 
@@ -181,6 +181,13 @@ public class ImageGenController : ControllerBase
         }
 
         var result = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine("_____-------------------------------------");
+        Console.WriteLine(result);
+        Console.WriteLine("_____-------------------------------------");
+        
+        // TODO: add tune id to the user
+        
         return Ok(result);
     }
 }

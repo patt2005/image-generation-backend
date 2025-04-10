@@ -17,6 +17,9 @@ public class RevenueCatController : ControllerBase
         _context = context;
     }
     
+    // [HttpPost("add-credits-after-purchase")]
+    // public async Task<IActionResult> AddCreditsAfterPurchase([FromQuery] Guid userId)
+    
     [HttpPost("on-subscription-event")]
     public async Task<IActionResult> OnSubscriptionEvent()
     {
@@ -24,8 +27,8 @@ public class RevenueCatController : ControllerBase
         var body = await reader.ReadToEndAsync();
 
         var requestBody = JsonSerializer.Deserialize<RevenueCatWebhookPayload>(body);
-
-        if (requestBody == null || requestBody.Event == null)
+        
+        if (requestBody == null)
         {
             return BadRequest("Invalid payload");
         }

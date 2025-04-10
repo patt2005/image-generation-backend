@@ -8,7 +8,7 @@ public class User
     [Column("id")]
     public Guid Id { get; set; }
     [Column("tune-id")]
-    public int TuneId { get; set; }
+    public int? TuneId { get; set; }
     [Column("fcm-token-id")]
     public string? FcmTokenId { get; set; }
     [Column("gender")]
