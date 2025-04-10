@@ -182,11 +182,23 @@ public class ImageGenController : ControllerBase
 
         var result = await response.Content.ReadAsStringAsync();
 
-        Console.WriteLine("_____-------------------------------------");
-        Console.WriteLine(result);
-        Console.WriteLine("_____-------------------------------------");
+        var decoded = JsonSerializer.Deserialize<TuneModelResponse>(result);
+
+        if (decoded == null)
+        {
+            return BadRequest("The request callback body is invalid.");
+        }
         
-        // TODO: add tune id to the user
+        var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (foundUser == null)
+        {
+            return BadRequest("The user couldn't be found.");
+        }
+        
+        foundUser.TuneId = decoded.Id;
+        
+        await _dbContext.SaveChangesAsync();
         
         return Ok(result);
     }
