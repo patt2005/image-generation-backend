@@ -16,22 +16,6 @@ public class RevenueCatController : ControllerBase
     {
         _context = context;
     }
-
-    [HttpPost("set-credits-after-purchase")]
-    public async Task<IActionResult> AddCreditsAfterPurchase([FromQuery] Guid userId, [FromQuery] int credits)
-    {
-        var foundUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-        if (foundUser == null)
-        {
-            return BadRequest("User not found");
-        }
-        
-        foundUser.Credits = credits;
-        await _context.SaveChangesAsync();
-        
-        return Ok("Success");
-    }
     
     [HttpPost("on-subscription-event")]
     public async Task<IActionResult> OnSubscriptionEvent()
@@ -41,9 +25,9 @@ public class RevenueCatController : ControllerBase
 
         var requestBody = JsonSerializer.Deserialize<RevenueCatWebhookPayload>(body);
 
-        if (requestBody.Event.Type != "RENEWAL" || requestBody.Event.Type != "PRODUCT_CHANGE")
+        if (requestBody == null)
         {
-            return Ok("Invalid request");
+            return BadRequest("Failed to parse request body");
         }
         
         if (!Guid.TryParse(requestBody.Event.AppUserId, out Guid userId))
@@ -74,10 +58,11 @@ public class RevenueCatController : ControllerBase
                 foundUser.Credits += 1000;
                 break;
             default:
-                return Ok("Product ID not tracked for credits.");
+                return BadRequest("Product ID is invalid.");
         }
 
         await _context.SaveChangesAsync();
+        
         return Ok("Credits updated successfully");
     }
 }
