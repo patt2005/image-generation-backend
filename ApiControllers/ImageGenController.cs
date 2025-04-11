@@ -26,7 +26,7 @@ public class ImageGenController : ControllerBase
     }
 
     [HttpPost("generate-headshot")]
-    public async Task<IActionResult> GenerateHeadshot([FromQuery] Guid userId, [FromQuery] string prompt, [FromQuery] string presetCategory)
+    public async Task<IActionResult> GenerateHeadshot([FromQuery] int? tempJobId, [FromQuery] Guid userId, [FromQuery] string prompt, [FromQuery] string presetCategory)
     {
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
@@ -56,10 +56,14 @@ public class ImageGenController : ControllerBase
         
         try
         {
-            Console.WriteLine(responseBody);
-            
             var jobInfo = JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
 
+            if (tempJobId != null)
+            {
+                var tempJob = await _dbContext.ImageJobs.FirstOrDefaultAsync(j => j.Id == tempJobId);
+                _dbContext.ImageJobs.Remove(tempJob);
+            }
+            
             var job = new ImageJob
             {
                 Id = jobInfo.Id,
@@ -80,6 +84,7 @@ public class ImageGenController : ControllerBase
         }
         catch (Exception e)
         {
+            Console.WriteLine(e.Message);
             return BadRequest(e.Message);
         }
     }
@@ -136,70 +141,91 @@ public class ImageGenController : ControllerBase
             await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
         }
         
-        return Ok();
+        return Ok("Success");
     }
 
     [HttpPost("tune-model")]
     public async Task<IActionResult> TuneModel([FromForm] List<IFormFile> images, [FromForm] string gender, [FromQuery] Guid userId, [FromForm] string prompt, [FromForm] string presetCategory)
     {
-        if (!images.Any())
+        try
         {
-            return BadRequest("No images uploaded.");
+            if (!images.Any())
+            {
+                return BadRequest("No images uploaded.");
+            }
+
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+
+            var content = new MultipartFormDataContent();
+
+            content.Add(new StringContent(Guid.NewGuid().ToString()), "tune[title]");
+            content.Add(new StringContent(gender), "tune[name]");
+            content.Add(new StringContent("flux-lora-portrait"), "tune[preset]");
+            content.Add(new StringContent("1504944"), "tune[base_tune_id]");
+            content.Add(new StringContent("lora"), "tune[model_type]");
+            
+            var encodedPrompt = Uri.EscapeDataString(prompt);
+
+            var tempJob = new ImageJob
+            {
+                Id = new Random().Next(1, 1000),
+                UserId = userId,
+                Status = JobStatus.Processing,
+                SystemPrompt = prompt,
+                CreationDate = DateTime.UtcNow,
+                Images = "[]",
+                PresetCategory = Enum.TryParse<PresetCategory>(presetCategory, true, out var parsedCategory)
+                    ? parsedCategory
+                    : PresetCategory.Headshots
+            };
+            
+            var callbackUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?userId={userId}&prompt={encodedPrompt}&presetCategory={presetCategory}&tempJobId={tempJob.Id}";
+
+            content.Add(new StringContent(callbackUrl), "tune[callback]");
+
+            foreach (var image in images)
+            {
+                var streamContent = new StreamContent(image.OpenReadStream());
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(image.ContentType);
+                content.Add(streamContent, "tune[images][]", image.FileName);
+            }
+
+            var response = await httpClient.PostAsync("https://api.astria.ai/tunes", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                return StatusCode((int)response.StatusCode, error);
+            }
+
+            var result = await response.Content.ReadAsStringAsync();
+
+            var decoded = JsonSerializer.Deserialize<TuneModelResponse>(result);
+
+            if (decoded == null)
+            {
+                return BadRequest("The request callback body is invalid.");
+            }
+            
+            var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (foundUser == null)
+            {
+                return BadRequest("The user couldn't be found.");
+            }
+            
+            foundUser.TuneId = decoded.Id;
+
+            await _dbContext.ImageJobs.AddAsync(tempJob);
+            await _dbContext.SaveChangesAsync();
+            
+            return Ok("Tune has started.");
         }
-
-        using var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-
-        var content = new MultipartFormDataContent();
-
-        content.Add(new StringContent(Guid.NewGuid().ToString()), "tune[title]");
-        content.Add(new StringContent(gender), "tune[name]");
-        content.Add(new StringContent("flux-lora-portrait"), "tune[preset]");
-        content.Add(new StringContent("1504944"), "tune[base_tune_id]");
-        content.Add(new StringContent("lora"), "tune[model_type]");
-        // content.Add(new StringContent("fast"), "tune[branch]");
-        
-        var encodedPrompt = Uri.EscapeDataString(prompt);
-
-        var callbackUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?userId={userId}&prompt={encodedPrompt}&presetCategory={presetCategory}";
-
-        content.Add(new StringContent(callbackUrl), "tune[callback]");
-
-        foreach (var image in images)
+        catch (Exception e)
         {
-            var streamContent = new StreamContent(image.OpenReadStream());
-            streamContent.Headers.ContentType = new MediaTypeHeaderValue(image.ContentType);
-            content.Add(streamContent, "tune[images][]", image.FileName);
+            Console.WriteLine(e.Message);
+            return BadRequest(e.Message);
         }
-
-        var response = await httpClient.PostAsync("https://api.astria.ai/tunes", content);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            return StatusCode((int)response.StatusCode, error);
-        }
-
-        var result = await response.Content.ReadAsStringAsync();
-
-        var decoded = JsonSerializer.Deserialize<TuneModelResponse>(result);
-
-        if (decoded == null)
-        {
-            return BadRequest("The request callback body is invalid.");
-        }
-        
-        var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-        if (foundUser == null)
-        {
-            return BadRequest("The user couldn't be found.");
-        }
-        
-        foundUser.TuneId = decoded.Id;
-        
-        await _dbContext.SaveChangesAsync();
-        
-        return Ok(result);
     }
 }
