@@ -34,6 +34,14 @@ public class JobController : ControllerBase
         return Ok(jobs);
     }
 
+    [HttpGet("test")]
+    public async Task<IActionResult> GetTest()
+    {
+        var auth = Environment.GetEnvironmentVariable("FirebaseAuthCredentials");
+
+        return Ok(auth);
+    }
+
     [HttpGet("list-job-images")]
     public async Task<IActionResult> GetJobImages([FromQuery] int jobId)
     {
