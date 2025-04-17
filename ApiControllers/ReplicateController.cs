@@ -183,6 +183,9 @@ public class ReplicateController : ControllerBase
         }
         catch (Exception ex)
         {
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine(ex.Message);
+            Console.WriteLine("-----------------------------------------------------------------");
             return StatusCode(500, ex.Message);
         }
     }
