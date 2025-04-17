@@ -36,11 +36,14 @@ public class ImageGenController : ControllerBase
             string prompt;
             Guid userId;
             PresetCategory category;
+            int tuneId;
 
             if (tempJobId == null)
             {
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == payload.UserId);
                 if (user == null) return BadRequest("User not found");
+
+                tuneId = user.TuneId;
 
                 prompt = payload.Prompt;
                 userId = payload.UserId;
@@ -64,6 +67,8 @@ public class ImageGenController : ControllerBase
 
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == tempJob.UserId);
                 if (user == null) return BadRequest("User not found");
+                
+                tuneId = user.TuneId;
 
                 prompt = tempJob.SystemPrompt;
                 userId = tempJob.UserId;
@@ -83,7 +88,7 @@ public class ImageGenController : ControllerBase
                 };
             }
 
-            var jobInfo = await PostToAstriaAsync(prompt, userId);
+            var jobInfo = await PostToAstriaAsync(prompt, tuneId, userId);
 
             job.Id = jobInfo.Id;
             job.CreationDate = jobInfo.CreatedAt;
@@ -101,11 +106,11 @@ public class ImageGenController : ControllerBase
         }
     }
 
-    private async Task<ImageGenerationResponse> PostToAstriaAsync(string prompt, Guid userId)
+    private async Task<ImageGenerationResponse> PostToAstriaAsync(string prompt, int tuneId, Guid userId)
     {
         var values = new Dictionary<string, string>
         {
-            { "prompt[text]", $"<lora:{userId}:1> {prompt}" },
+            { "prompt[text]", $"<lora:{tuneId}:1> {prompt}" },
             { "prompt[callback]", $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/on-image-generated?userId={userId}" }
         };
 
