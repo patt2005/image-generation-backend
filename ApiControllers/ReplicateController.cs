@@ -97,6 +97,10 @@ public class ReplicateController : ControllerBase
 
         if (result == null)
         {
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine("Failed to fetch deserialize callback payload.");
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine(body);
             return BadRequest("Failed to deserialize payload.");
         }
         
@@ -104,6 +108,10 @@ public class ReplicateController : ControllerBase
 
         if (result.Status != "succeeded")
         {
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine($"Failed to change the status of the job {result.Status}.");
+            Console.WriteLine("-----------------------------------------------------------------");
+            
             foundJob.Status = Enum.TryParse(result.Status, out EnhanceStatus status) ? status : EnhanceStatus.Failed;
             
             return Ok("Status changed to " + result.Status);
@@ -118,6 +126,10 @@ public class ReplicateController : ControllerBase
         
         if (result?.Output == null)
         {
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine("Failed to parse the output.");
+            Console.WriteLine("-----------------------------------------------------------------");
+            Console.WriteLine(result);
             return BadRequest("Failed to parse response.");
         }
 
