@@ -26,7 +26,7 @@ public class ImageGenController : ControllerBase
     }
 
     [HttpPost("generate-headshot")]
-    public async Task<IActionResult> GenerateHeadshot([FromQuery] int? tempJobId, [FromQuery] Guid userId, [FromQuery] string prompt, [FromQuery] string presetCategory)
+    public async Task<IActionResult> GenerateHeadshot([FromQuery] int? tempJobId, [FromQuery] Guid userId, [FromQuery] string? prompt, [FromQuery] string presetCategory)
     {
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
@@ -37,7 +37,18 @@ public class ImageGenController : ControllerBase
         
         var apiUrl = $"https://api.astria.ai/tunes/1504944/prompts";
 
-        var decodedQuery = Uri.UnescapeDataString(prompt);
+        var decodedQuery = "";
+        
+        if (tempJobId != null)
+        {
+            var tempJob = await _dbContext.ImageJobs.FirstOrDefaultAsync(j => j.Id == tempJobId);
+            decodedQuery = tempJob.SystemPrompt;
+            _dbContext.ImageJobs.Remove(tempJob);
+        }
+        else
+        {
+            decodedQuery = Uri.UnescapeDataString(prompt);
+        }
         
         var values = new Dictionary<string, string>
         {
@@ -53,18 +64,10 @@ public class ImageGenController : ControllerBase
         var response = await httpClient.PostAsync(apiUrl, content);
 
         var responseBody = await response.Content.ReadAsStringAsync();
-
-        Console.WriteLine(responseBody);
         
         try
         {
             var jobInfo = JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
-
-            if (tempJobId != null)
-            {
-                var tempJob = await _dbContext.ImageJobs.FirstOrDefaultAsync(j => j.Id == tempJobId);
-                _dbContext.ImageJobs.Remove(tempJob);
-            }
             
             var job = new ImageJob
             {
@@ -182,7 +185,7 @@ public class ImageGenController : ControllerBase
                     : PresetCategory.Headshots
             };
             
-            var callbackUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?userId={userId}&prompt={encodedPrompt}&presetCategory={presetCategory}&tempJobId={tempJob.Id}";
+            var callbackUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?userId={userId}&presetCategory={presetCategory}&tempJobId={tempJob.Id}";
 
             Console.WriteLine("-------------------------------------------------------");
             Console.WriteLine(callbackUrl);
