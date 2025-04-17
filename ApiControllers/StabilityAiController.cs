@@ -1,8 +1,6 @@
-using System.Collections.ObjectModel;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PhotoAiBackend.Models;
 using PhotoAiBackend.Persistance;
 using PhotoAiBackend.Persistance.Entities;
 using PhotoAiBackend.Services;
@@ -17,12 +15,14 @@ public class StabilityAiController : ControllerBase
     private readonly string _apiUrl = "https://api.stability.ai/v2beta/stable-image/upscale/fast";
     private readonly AppDbContext _dbContext;
     private readonly INotificationService _notificationService;
+    private readonly IFileService _fileService;
 
-    public StabilityAiController(AppDbContext dbContext, INotificationService notificationService)
+    public StabilityAiController(AppDbContext dbContext, INotificationService notificationService, IFileService fileService)
     {
         _apiKey = Environment.GetEnvironmentVariable("StabilityAiApiKey");
         _dbContext = dbContext;
         _notificationService = notificationService;
+        _fileService = fileService;
     }
 
     private byte[] GetFileArray(IFormFile file)
@@ -78,12 +78,14 @@ public class StabilityAiController : ControllerBase
                 Status = EnhanceStatus.Succeeded,
                 CreatedAt = DateTime.UtcNow
             };
+
+            var url = await _fileService.UploadFile(imageBytes);
             
             var enhanceImage = new EnhanceImage
             {
                 Id = Guid.NewGuid(),
                 JobId = jobId,
-                Data = imageBytes
+                ImageUrl = url
             };
             
             var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);

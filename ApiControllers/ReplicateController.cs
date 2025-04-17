@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -19,62 +18,19 @@ public class ReplicateController : ControllerBase
     private readonly AppDbContext _dbContext;
     private readonly string _apiKey;
     private INotificationService _notificationService;
+    private IFileService _fileService;
 
-    public ReplicateController(AppDbContext dbContext, INotificationService notificationService)
+    public ReplicateController(AppDbContext dbContext, INotificationService notificationService, IFileService fileService)
     {
         _apiKey = Environment.GetEnvironmentVariable("ReplicateApiKey");
         _dbContext = dbContext;
         _notificationService = notificationService;
-    }
-    
-    [HttpPost("upload-image")]
-    public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
-    {
-        try
-        {
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest("No file provided.");
-            }
-    
-            var replicateUrl = "https://api.replicate.com/v1/files";
-            using var httpClient = new HttpClient();
-    
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-            
-            var content = new MultipartFormDataContent();
-    
-            var fileStream = file.OpenReadStream();
-            var fileContent = new StreamContent(fileStream);
-            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-            
-            content.Add(fileContent, "\"content\"", "\"filename.jpg\"");
-    
-            var response = await httpClient.PostAsync(replicateUrl, content);
-    
-            var responseText = await response.Content.ReadAsStringAsync();
-    
-            if (!response.IsSuccessStatusCode)
-            {
-                return StatusCode((int)response.StatusCode, responseText);
-            }
-            
-            var json = JsonDocument.Parse(responseText);
-            var url = json.RootElement.GetProperty("urls").GetProperty("get").GetString();
-    
-            return Ok(new { imageUrl = url });
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("❌ Error uploading image to Replicate:", ex.Message);
-            return StatusCode(500, ex.Message);
-        }
+        _fileService = fileService;
     }
     
     private async Task<byte[]> DownloadImageAsync(string imageUrl)
     {
         using var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
     
         var response = await httpClient.GetAsync(imageUrl);
     
@@ -145,13 +101,14 @@ public class ReplicateController : ControllerBase
                 return NotFound("Job not found.");
             }
         
-            var data = await DownloadImageAsync(result.Input.Image);
+            var data = await DownloadImageAsync(result.Output);
+            var url = await _fileService.UploadFile(data);
 
             var image = new EnhanceImage
             {
                 Id = Guid.NewGuid(),
                 JobId = foundJob.Id,
-                Data = data
+                ImageUrl = url
             };
 
             await _dbContext.EnhanceImages.AddAsync(image);

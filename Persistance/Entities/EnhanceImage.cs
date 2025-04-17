@@ -11,7 +11,7 @@ public class EnhanceImage
     public string JobId { get; set; }
     public EnhanceJob Job { get; set; }
     [Column("data")]
-    public byte[] Data { get; set; }
+    public string ImageUrl { get; set; }
     [Column("mime-type")]
     public string MimeType { get; set; } = "image/png";
 }
