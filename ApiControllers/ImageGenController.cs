@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
@@ -26,9 +25,19 @@ public class ImageGenController : ControllerBase
     }
 
     [HttpPost("generate-headshot")]
-    public async Task<IActionResult> GenerateHeadshot([FromQuery] int? tempJobId, [FromQuery] Guid userId, [FromQuery] string? prompt, [FromQuery] string presetCategory)
+    public async Task<IActionResult> GenerateHeadshot([FromQuery] int? tempJobId)
     {
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        using var reader = new StreamReader(Request.Body);
+        var requestBody = await reader.ReadToEndAsync();
+        
+        var payload = JsonSerializer.Deserialize<ImageGenerationPayload>(requestBody);
+
+        if (payload == null)
+        {
+            return BadRequest("Invalid request body");
+        }
+        
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == payload.UserId);
 
         if (user == null)
         {
@@ -47,7 +56,7 @@ public class ImageGenController : ControllerBase
         }
         else
         {
-            decodedQuery = Uri.UnescapeDataString(prompt);
+            decodedQuery = Uri.UnescapeDataString(payload.Prompt);
         }
         
         var values = new Dictionary<string, string>
@@ -75,9 +84,9 @@ public class ImageGenController : ControllerBase
                 CreationDate = jobInfo.CreatedAt,
                 Status = JobStatus.Processing,
                 SystemPrompt = jobInfo.Text,
-                UserId = userId,
+                UserId = payload.UserId,
                 Images = "[]",
-                PresetCategory = Enum.TryParse<PresetCategory>(presetCategory, true, out var parsedCategory)
+                PresetCategory = Enum.TryParse<PresetCategory>(payload.PresetCategory, true, out var parsedCategory)
                     ? parsedCategory
                     : PresetCategory.Headshots
             };
@@ -150,7 +159,7 @@ public class ImageGenController : ControllerBase
     }
 
     [HttpPost("tune-model")]
-    public async Task<IActionResult> TuneModel([FromForm] List<IFormFile> images, [FromForm] string gender, [FromQuery] Guid userId, [FromForm] string prompt, [FromForm] string presetCategory)
+    public async Task<IActionResult> TuneModel([FromForm] List<IFormFile> images, [FromForm] string gender, [FromForm] Guid userId, [FromForm] string prompt, [FromForm] string presetCategory)
     {
         try
         {
@@ -169,8 +178,6 @@ public class ImageGenController : ControllerBase
             content.Add(new StringContent("flux-lora-portrait"), "tune[preset]");
             content.Add(new StringContent("1504944"), "tune[base_tune_id]");
             content.Add(new StringContent("lora"), "tune[model_type]");
-            
-            var encodedPrompt = Uri.EscapeDataString(prompt);
 
             var tempJob = new ImageJob
             {
