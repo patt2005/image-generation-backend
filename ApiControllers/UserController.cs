@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -18,6 +19,22 @@ public class UserController : ControllerBase
     public UserController(AppDbContext dbContext)
     {
         _dbContext = dbContext;
+    }
+
+    [HttpPost("add-credits")]
+    public async Task<IActionResult> AddCredits([FromQuery] Guid userId, [FromQuery] int credits)
+    {
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return BadRequest("User not found");
+        }
+        
+        user.Credits += credits;
+        await _dbContext.SaveChangesAsync();
+        
+        return Ok("Success");
     }
 
     [HttpGet("get-credits")]
