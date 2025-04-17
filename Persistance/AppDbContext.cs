@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using PhotoAiBackend.Models;
 using PhotoAiBackend.Persistance.Entities;
 
 namespace PhotoAiBackend.Persistance;

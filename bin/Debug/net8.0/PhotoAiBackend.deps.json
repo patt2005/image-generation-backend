@@ -9,6 +9,7 @@
       "PhotoAiBackend/1.0.0": {
         "dependencies": {
           "FirebaseAdmin": "3.1.0",
+          "Google.Cloud.Storage.V1": "4.11.0",
           "Microsoft.AspNetCore.OpenApi": "8.0.7",
           "Microsoft.EntityFrameworkCore": "8.0.14",
           "Microsoft.EntityFrameworkCore.Design": "8.0.14",
@@ -21,7 +22,7 @@
       },
       "FirebaseAdmin/3.1.0": {
         "dependencies": {
-          "Google.Api.Gax.Rest": "4.8.0",
+          "Google.Api.Gax.Rest": "4.9.0",
           "Google.Apis.Auth": "1.68.0",
           "System.Collections.Immutable": "8.0.0"
         },
@@ -32,28 +33,29 @@
           }
         }
       },
-      "Google.Api.Gax/4.8.0": {
+      "Google.Api.Gax/4.9.0": {
         "dependencies": {
           "Microsoft.Bcl.AsyncInterfaces": "6.0.0",
-          "Newtonsoft.Json": "13.0.3"
+          "Newtonsoft.Json": "13.0.3",
+          "System.Diagnostics.DiagnosticSource": "6.0.1"
         },
         "runtime": {
           "lib/netstandard2.0/Google.Api.Gax.dll": {
-            "assemblyVersion": "4.8.0.0",
-            "fileVersion": "4.8.0.0"
+            "assemblyVersion": "4.9.0.0",
+            "fileVersion": "4.9.0.0"
           }
         }
       },
-      "Google.Api.Gax.Rest/4.8.0": {
+      "Google.Api.Gax.Rest/4.9.0": {
         "dependencies": {
-          "Google.Api.Gax": "4.8.0",
+          "Google.Api.Gax": "4.9.0",
           "Google.Apis.Auth": "1.68.0",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.2"
         },
         "runtime": {
           "lib/netstandard2.0/Google.Api.Gax.Rest.dll": {
-            "assemblyVersion": "4.8.0.0",
-            "fileVersion": "4.8.0.0"
+            "assemblyVersion": "4.9.0.0",
+            "fileVersion": "4.9.0.0"
           }
         }
       },
@@ -89,6 +91,30 @@
           "lib/net6.0/Google.Apis.Core.dll": {
             "assemblyVersion": "1.68.0.0",
             "fileVersion": "1.68.0.0"
+          }
+        }
+      },
+      "Google.Apis.Storage.v1/1.68.0.3604": {
+        "dependencies": {
+          "Google.Apis": "1.68.0",
+          "Google.Apis.Auth": "1.68.0"
+        },
+        "runtime": {
+          "lib/net6.0/Google.Apis.Storage.v1.dll": {
+            "assemblyVersion": "1.68.0.3604",
+            "fileVersion": "1.68.0.3604"
+          }
+        }
+      },
+      "Google.Cloud.Storage.V1/4.11.0": {
+        "dependencies": {
+          "Google.Api.Gax.Rest": "4.9.0",
+          "Google.Apis.Storage.v1": "1.68.0.3604"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Google.Cloud.Storage.V1.dll": {
+            "assemblyVersion": "4.11.0.0",
+            "fileVersion": "4.11.0.0"
           }
         }
       },
@@ -639,6 +665,11 @@
           }
         }
       },
+      "System.Diagnostics.DiagnosticSource/6.0.1": {
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        }
+      },
       "System.IO.Pipelines/6.0.3": {},
       "System.Management/7.0.2": {
         "dependencies": {
@@ -686,19 +717,19 @@
       "path": "firebaseadmin/3.1.0",
       "hashPath": "firebaseadmin.3.1.0.nupkg.sha512"
     },
-    "Google.Api.Gax/4.8.0": {
+    "Google.Api.Gax/4.9.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-xlV8Jq/G5CQAA3PwYAuKGjfzGOP7AvjhREnE6vgZlzxREGYchHudZWa2PWSqFJL+MBtz9YgitLpRogANN3CVvg==",
-      "path": "google.api.gax/4.8.0",
-      "hashPath": "google.api.gax.4.8.0.nupkg.sha512"
+      "sha512": "sha512-fjHHYcQ99u0ztqwT537rvVtJMdDy6G2VHBZ+F1cBjDGYNVZfrpk40DMQ/OpUGToT9ZGHVirhh3eJ73bw2ANVPQ==",
+      "path": "google.api.gax/4.9.0",
+      "hashPath": "google.api.gax.4.9.0.nupkg.sha512"
     },
-    "Google.Api.Gax.Rest/4.8.0": {
+    "Google.Api.Gax.Rest/4.9.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-zaA5LZ2VvGj/wwIzRB68swr7khi2kWNgqWvsB0fYtScIAl3kGkGtqiBcx63H1YLeKr5xau1866bFjTeReH6FSQ==",
-      "path": "google.api.gax.rest/4.8.0",
-      "hashPath": "google.api.gax.rest.4.8.0.nupkg.sha512"
+      "sha512": "sha512-xzHvOe8WzmSWVurtRFG+uSMWIKPHAAyhGdnGfBNSr4xSBzHsx7G5rWjjZhGcyeCYc0ZdaKEVyidtQS7A2OD2mg==",
+      "path": "google.api.gax.rest/4.9.0",
+      "hashPath": "google.api.gax.rest.4.9.0.nupkg.sha512"
     },
     "Google.Apis/1.68.0": {
       "type": "package",
@@ -720,6 +751,20 @@
       "sha512": "sha512-pAqwa6pfu53UXCR2b7A/PAPXeuVg6L1OFw38WckN27NU2+mf+KTjoEg2YGv/f0UyKxzz7DxF1urOTKg/6dTP9g==",
       "path": "google.apis.core/1.68.0",
       "hashPath": "google.apis.core.1.68.0.nupkg.sha512"
+    },
+    "Google.Apis.Storage.v1/1.68.0.3604": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-l9RELaUjKZ0YhSbKRoj/mcsC9kdY2+wFcbfP9Zaah/sWoi9rE9zoOBI/3aUKbPx2ioB09lvEvICfWuoOUYQM0A==",
+      "path": "google.apis.storage.v1/1.68.0.3604",
+      "hashPath": "google.apis.storage.v1.1.68.0.3604.nupkg.sha512"
+    },
+    "Google.Cloud.Storage.V1/4.11.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-BGzuSPN1A4M0eWJT6Xi9HVuQAQmGV43qzn6PhOy2wnhgCU7tcRGWryCNZOLflA+53a4zkPcRk4i/rUwmUuuJSQ==",
+      "path": "google.cloud.storage.v1/4.11.0",
+      "hashPath": "google.cloud.storage.v1.4.11.0.nupkg.sha512"
     },
     "Humanizer.Core/2.14.1": {
       "type": "package",
@@ -1007,6 +1052,13 @@
       "sha512": "sha512-iUR1eHrL8Cwd82neQCJ00MpwNIBs4NZgXzrPqx8NJf/k4+mwBO0XCRmHYJT4OLSwDDqh5nBLJWkz5cROnrGhRA==",
       "path": "system.composition.typedparts/6.0.0",
       "hashPath": "system.composition.typedparts.6.0.0.nupkg.sha512"
+    },
+    "System.Diagnostics.DiagnosticSource/6.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-KiLYDu2k2J82Q9BJpWiuQqCkFjRBWVq4jDzKKWawVi9KWzyD0XG3cmfX0vqTQlL14Wi9EufJrbL0+KCLTbqWiQ==",
+      "path": "system.diagnostics.diagnosticsource/6.0.1",
+      "hashPath": "system.diagnostics.diagnosticsource.6.0.1.nupkg.sha512"
     },
     "System.IO.Pipelines/6.0.3": {
       "type": "package",
