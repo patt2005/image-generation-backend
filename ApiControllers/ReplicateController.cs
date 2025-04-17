@@ -104,7 +104,7 @@ public class ReplicateController : ControllerBase
 
         if (result.Status != "succeeded")
         {
-            foundJob.Status = Enum.TryParse(result.Status, out EnhanceStatus status) ? status : EnhanceStatus.Running;
+            foundJob.Status = Enum.TryParse(result.Status, out EnhanceStatus status) ? status : EnhanceStatus.Failed;
             
             return Ok("Status changed to " + result.Status);
         }
@@ -191,7 +191,6 @@ public class ReplicateController : ControllerBase
             {
                 version = "f121d640bd286e1fdc67f9799164c1d5be36ff74576ee11c803ae5b665dd46aa",
                 webhook = webhookUrl,
-                webhook_events_filter = new[] { "completed", "failed" },
                 input = new
                 {
                     image = imageUrl,
