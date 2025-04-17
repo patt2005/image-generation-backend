@@ -191,7 +191,7 @@ public class ReplicateController : ControllerBase
             {
                 version = "f121d640bd286e1fdc67f9799164c1d5be36ff74576ee11c803ae5b665dd46aa",
                 webhook = webhookUrl,
-                webhook_events_filter = new[] { "completed" },
+                webhook_events_filter = new[] { "completed", "failed" },
                 input = new
                 {
                     image = imageUrl,
@@ -239,6 +239,7 @@ public class ReplicateController : ControllerBase
         }
         catch (Exception ex)
         {
+            Console.WriteLine(ex.Message);
             return StatusCode(500, $"❌ Error: {ex.Message}");
         }
     }
