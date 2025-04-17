@@ -88,58 +88,62 @@ public class ReplicateController : ControllerBase
     [HttpPost("on-prediction-complete")]
     public async Task<IActionResult> OnPredictionComplete([FromQuery] Guid userId)
     {
-        var body = await new StreamReader(Request.Body).ReadToEndAsync();
-        
-        var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
-
-        if (result == null)
-        {
-            Console.WriteLine("-----------------------------------------------------------------");
-            Console.WriteLine("Failed to fetch deserialize callback payload.");
-            Console.WriteLine("-----------------------------------------------------------------");
-            Console.WriteLine(body);
-            return BadRequest("Failed to deserialize payload.");
-        }
-        
-        var foundJob = await _dbContext.EnhanceJobs.FirstOrDefaultAsync(j => j.Id == result.Id);
-
-        if (result.Status != "succeeded")
-        {
-            Console.WriteLine("-----------------------------------------------------------------");
-            Console.WriteLine($"Failed to change the status of the job {result.Status}.");
-            Console.WriteLine("-----------------------------------------------------------------");
-            
-            foundJob.Status = Enum.TryParse(result.Status, out EnhanceStatus status) ? status : EnhanceStatus.Failed;
-            
-            return Ok("Status changed to " + result.Status);
-        }
-        
-        var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
-        
-        if (foundUser == null)
-        {
-            return NotFound("User not found.");
-        }
-        
-        if (result?.Output == null)
-        {
-            Console.WriteLine("-----------------------------------------------------------------");
-            Console.WriteLine("Failed to parse the output.");
-            Console.WriteLine("-----------------------------------------------------------------");
-            Console.WriteLine(result);
-            return BadRequest("Failed to parse response.");
-        }
-
-        if (foundJob == null)
-        {
-            return NotFound("Job not found.");
-        }
-
         try
         {
+            var body = await new StreamReader(Request.Body).ReadToEndAsync();
+
+            Console.WriteLine("--------------------------------------------");
+            Console.WriteLine(body);
+            Console.WriteLine("--------------------------------------------");
+            
+            var result = JsonSerializer.Deserialize<EnhanceCallbackPayload>(body, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (result == null)
+            {
+                Console.WriteLine("-----------------------------------------------------------------");
+                Console.WriteLine("Failed to fetch deserialize callback payload.");
+                Console.WriteLine("-----------------------------------------------------------------");
+                Console.WriteLine(body);
+                return BadRequest("Failed to deserialize payload.");
+            }
+            
+            var foundJob = await _dbContext.EnhanceJobs.FirstOrDefaultAsync(j => j.Id == result.Id);
+
+            if (result.Status != "succeeded")
+            {
+                Console.WriteLine("-----------------------------------------------------------------");
+                Console.WriteLine($"Failed to change the status of the job {result.Status}.");
+                Console.WriteLine("-----------------------------------------------------------------");
+                
+                foundJob.Status = Enum.TryParse(result.Status, out EnhanceStatus status) ? status : EnhanceStatus.Failed;
+                
+                return Ok("Status changed to " + result.Status);
+            }
+            
+            var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            
+            if (foundUser == null)
+            {
+                return NotFound("User not found.");
+            }
+            
+            if (result?.Output == null)
+            {
+                Console.WriteLine("-----------------------------------------------------------------");
+                Console.WriteLine("Failed to parse the output.");
+                Console.WriteLine("-----------------------------------------------------------------");
+                Console.WriteLine(result);
+                return BadRequest("Failed to parse response.");
+            }
+
+            if (foundJob == null)
+            {
+                return NotFound("Job not found.");
+            }
+        
             var data = await DownloadImageAsync(result.Input.Image);
 
             var image = new EnhanceImage
