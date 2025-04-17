@@ -74,6 +74,7 @@ public class ReplicateController : ControllerBase
     private async Task<byte[]> DownloadImageAsync(string imageUrl)
     {
         using var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
     
         var response = await httpClient.GetAsync(imageUrl);
     
