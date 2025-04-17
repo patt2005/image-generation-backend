@@ -99,24 +99,24 @@ public class StabilityAiController : ControllerBase
             await _dbContext.EnhanceImages.AddAsync(enhanceImage);
             await _dbContext.SaveChangesAsync();
 
-            if (foundUser.FcmTokenId != null)
-            {
-                var notificationData = new Dictionary<string, string>
-                {
-                    { "type", GenerationType.Filter.ToString() },
-                    { "jobId", jobId }
-                };
-
-                IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(notificationData);
-        
-                var notification = new NotificationInfo
-                {
-                    Title = "Background Removed!",
-                    Text = "Your image background has been successfully removed. Tap to view the result."
-                };
-
-                await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
-            }
+            // if (foundUser.FcmTokenId != null)
+            // {
+            //     var notificationData = new Dictionary<string, string>
+            //     {
+            //         { "type", GenerationType.Filter.ToString() },
+            //         { "jobId", jobId }
+            //     };
+            //
+            //     IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(notificationData);
+            //
+            //     var notification = new NotificationInfo
+            //     {
+            //         Title = "Background Removed!",
+            //         Text = "Your image background has been successfully removed. Tap to view the result."
+            //     };
+            //
+            //     await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
+            // }
             
             return Ok(job);
         }

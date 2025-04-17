@@ -121,25 +121,25 @@ public class ImageGenController : ControllerBase
         foundUser.Credits -= 15;
 
         await _dbContext.SaveChangesAsync();
-
-        var data = new Dictionary<string, string>
-        {
-            { "type", GenerationType.Headshot.ToString() },
-            { "jobId", foundJob.Id.ToString() }
-        };
-
-        IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(data);
         
-        var notification = new NotificationInfo
-        {
-            Title = "Headshot Ready!",
-            Text = "Your AI-generated headshot is complete. Tap to view your results."
-        };
-        
-        if (foundUser.FcmTokenId != null)
-        {
-            await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
-        }
+        // if (foundUser.FcmTokenId != null)
+        // {
+        //     var data = new Dictionary<string, string>
+        //     {
+        //         { "type", GenerationType.Headshot.ToString() },
+        //         { "jobId", foundJob.Id.ToString() }
+        //     };
+        //
+        //     IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(data);
+        //
+        //     var notification = new NotificationInfo
+        //     {
+        //         Title = "Headshot Ready!",
+        //         Text = "Your AI-generated headshot is complete. Tap to view your results."
+        //     };
+        //     
+        //     await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
+        // }
         
         return Ok("Success");
     }

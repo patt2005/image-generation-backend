@@ -161,24 +161,24 @@ public class ReplicateController : ControllerBase
             
             await _dbContext.SaveChangesAsync();
         
-            if (foundUser.FcmTokenId != null)
-            {
-                var notificationData = new Dictionary<string, string>
-                {
-                    { "type", GenerationType.Filter.ToString() },
-                    { "jobId", foundJob.Id }
-                };
-
-                IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(notificationData);
-        
-                var notification = new NotificationInfo
-                {
-                    Title = "Photo Enhanced!",
-                    Text = "Your image has been enhanced with AI. Tap to see the improved version."
-                };  
-                
-                await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
-            }
+            // if (foundUser.FcmTokenId != null)
+            // {
+            //     var notificationData = new Dictionary<string, string>
+            //     {
+            //         { "type", GenerationType.Filter.ToString() },
+            //         { "jobId", foundJob.Id }
+            //     };
+            //
+            //     IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(notificationData);
+            //
+            //     var notification = new NotificationInfo
+            //     {
+            //         Title = "Photo Enhanced!",
+            //         Text = "Your image has been enhanced with AI. Tap to see the improved version."
+            //     };  
+            //     
+            //     await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
+            // }
         
             return Ok("The message was received.");
         }
