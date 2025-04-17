@@ -184,6 +184,10 @@ public class ImageGenController : ControllerBase
             
             var callbackUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?userId={userId}&prompt={encodedPrompt}&presetCategory={presetCategory}&tempJobId={tempJob.Id}";
 
+            Console.WriteLine("-------------------------------------------------------");
+            Console.WriteLine(callbackUrl);
+            Console.WriteLine("-------------------------------------------------------");
+            
             content.Add(new StringContent(callbackUrl), "tune[callback]");
 
             foreach (var image in images)
