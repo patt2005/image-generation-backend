@@ -25,71 +25,69 @@ public class ImageGenController : ControllerBase
     }
 
     [HttpPost("generate-headshot")]
-    public async Task<IActionResult> GenerateHeadshot([FromQuery] int? tempJobId)
+    public async Task<IActionResult> GenerateHeadshot([FromQuery] int? tempJobId, [FromBody] ImageGenerationPayload? payload = null)
     {
-        using var reader = new StreamReader(Request.Body);
-        var requestBody = await reader.ReadToEndAsync();
-        
-        var payload = JsonSerializer.Deserialize<ImageGenerationPayload>(requestBody);
-
-        if (payload == null)
-        {
-            return BadRequest("Invalid request body");
-        }
-        
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == payload.UserId);
-
-        if (user == null)
-        {
-            return BadRequest("User not found");
-        }
-        
-        var apiUrl = $"https://api.astria.ai/tunes/1504944/prompts";
-
-        var decodedQuery = "";
-        
-        if (tempJobId != null)
-        {
-            var tempJob = await _dbContext.ImageJobs.FirstOrDefaultAsync(j => j.Id == tempJobId);
-            decodedQuery = tempJob.SystemPrompt;
-            _dbContext.ImageJobs.Remove(tempJob);
-        }
-        else
-        {
-            decodedQuery = Uri.UnescapeDataString(payload.Prompt);
-        }
-        
-        var values = new Dictionary<string, string>
-        {
-            {"prompt[text]", $"<lora:{user.TuneId}:1> {decodedQuery}"},
-            {"prompt[callback]", $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/on-image-generated?userId={user.Id}"}
-        };
-
-        var content = new FormUrlEncodedContent(values);
-
-        using var httpClient = new HttpClient();
-        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-
-        var response = await httpClient.PostAsync(apiUrl, content);
-
-        var responseBody = await response.Content.ReadAsStringAsync();
-        
         try
         {
-            var jobInfo = JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
-            
-            var job = new ImageJob
+            if (tempJobId == null && payload == null)
+                return BadRequest("Payload is required when tempJobId is not provided.");
+
+            ImageJob job;
+            string prompt;
+            Guid userId;
+            PresetCategory category;
+
+            if (tempJobId == null)
             {
-                Id = jobInfo.Id,
-                CreationDate = jobInfo.CreatedAt,
-                Status = JobStatus.Processing,
-                SystemPrompt = jobInfo.Text,
-                UserId = payload.UserId,
-                Images = "[]",
-                PresetCategory = Enum.TryParse<PresetCategory>(payload.PresetCategory, true, out var parsedCategory)
-                    ? parsedCategory
-                    : PresetCategory.Headshots
-            };
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == payload.UserId);
+                if (user == null) return BadRequest("User not found");
+
+                prompt = payload.Prompt;
+                userId = payload.UserId;
+                category = Enum.TryParse<PresetCategory>(payload.PresetCategory, true, out var parsedCategory) ? parsedCategory : PresetCategory.Headshots;
+
+                job = new ImageJob
+                {
+                    Id = 0,
+                    CreationDate = DateTime.UtcNow,
+                    Status = JobStatus.Processing,
+                    SystemPrompt = prompt,
+                    UserId = userId,
+                    Images = "[]",
+                    PresetCategory = category
+                };
+            }
+            else
+            {
+                var tempJob = await _dbContext.ImageJobs.FirstOrDefaultAsync(j => j.Id == tempJobId);
+                if (tempJob == null) return BadRequest("Temp job not found");
+
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == tempJob.UserId);
+                if (user == null) return BadRequest("User not found");
+
+                prompt = tempJob.SystemPrompt;
+                userId = tempJob.UserId;
+                category = tempJob.PresetCategory;
+
+                _dbContext.ImageJobs.Remove(tempJob);
+
+                job = new ImageJob
+                {
+                    Id = 0,
+                    CreationDate = DateTime.UtcNow,
+                    Status = JobStatus.Processing,
+                    SystemPrompt = prompt,
+                    UserId = userId,
+                    Images = "[]",
+                    PresetCategory = category
+                };
+            }
+
+            var jobInfo = await PostToAstriaAsync(prompt, userId);
+
+            job.Id = jobInfo.Id;
+            job.CreationDate = jobInfo.CreatedAt;
+            job.SystemPrompt = jobInfo.Text;
 
             await _dbContext.ImageJobs.AddAsync(job);
             await _dbContext.SaveChangesAsync();
@@ -98,9 +96,27 @@ public class ImageGenController : ControllerBase
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
+            Console.WriteLine(e);
             return BadRequest(e.Message);
         }
+    }
+
+    private async Task<ImageGenerationResponse> PostToAstriaAsync(string prompt, Guid userId)
+    {
+        var values = new Dictionary<string, string>
+        {
+            { "prompt[text]", $"<lora:{userId}:1> {prompt}" },
+            { "prompt[callback]", $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/on-image-generated?userId={userId}" }
+        };
+
+        using var content = new FormUrlEncodedContent(values);
+        using var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+
+        var response = await httpClient.PostAsync("https://api.astria.ai/tunes/1504944/prompts", content);
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ImageGenerationResponse>(responseBody);
     }
 
     [HttpPost("on-image-generated")]
@@ -192,11 +208,7 @@ public class ImageGenController : ControllerBase
                     : PresetCategory.Headshots
             };
             
-            var callbackUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?userId={userId}&presetCategory={presetCategory}&tempJobId={tempJob.Id}";
-
-            Console.WriteLine("-------------------------------------------------------");
-            Console.WriteLine(callbackUrl);
-            Console.WriteLine("-------------------------------------------------------");
+            var callbackUrl = $"https://image-generation-backend-164860087792.us-central1.run.app/api/image/generate-headshot?tempJobId={tempJob.Id}";
             
             content.Add(new StringContent(callbackUrl), "tune[callback]");
 
