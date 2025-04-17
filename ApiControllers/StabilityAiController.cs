@@ -66,7 +66,10 @@ public class StabilityAiController : ControllerBase
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    Console.WriteLine("------------------------------------------");
                     var error = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine(error);
+                    Console.WriteLine("------------------------------------------");
                     return StatusCode((int)response.StatusCode, error);
                 }
 
