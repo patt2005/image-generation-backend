@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PhotoAiBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d846f0efadcf65b4f27687d6b33a6990835666ca")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e65fe6cc91f5afc5086811016ff7b2e91dad1d79")]
 [assembly: System.Reflection.AssemblyProductAttribute("PhotoAiBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PhotoAiBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
