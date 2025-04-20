@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
@@ -14,8 +15,8 @@ namespace PhotoAiBackend.ApiControllers;
 public class ImageGenController : ControllerBase
 {
     private readonly string _apiKey;
-    private AppDbContext _dbContext;
-    private INotificationService _notificationService;
+    private readonly AppDbContext _dbContext;
+    private readonly INotificationService _notificationService;
 
     public ImageGenController(AppDbContext dbContext, INotificationService notificationService)
     {
@@ -157,24 +158,24 @@ public class ImageGenController : ControllerBase
 
         await _dbContext.SaveChangesAsync();
         
-        // if (foundUser.FcmTokenId != null)
-        // {
-        //     var data = new Dictionary<string, string>
-        //     {
-        //         { "type", GenerationType.Headshot.ToString() },
-        //         { "jobId", foundJob.Id.ToString() }
-        //     };
-        //
-        //     IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(data);
-        //
-        //     var notification = new NotificationInfo
-        //     {
-        //         Title = "Headshot Ready!",
-        //         Text = "Your AI-generated headshot is complete. Tap to view your results."
-        //     };
-        //     
-        //     await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
-        // }
+        if (foundUser.FcmTokenId != null)
+        {
+            var data = new Dictionary<string, string>
+            {
+                { "type", GenerationType.Headshot.ToString() },
+                { "jobId", foundJob.Id.ToString() }
+            };
+        
+            IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(data);
+        
+            var notification = new NotificationInfo
+            {
+                Title = "Headshot is Ready!",
+                Text = "Your AI-generated headshot is complete. Tap to view your results."
+            };
+            
+            await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
+        }
         
         return Ok("Success");
     }
