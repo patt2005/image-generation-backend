@@ -1,7 +1,9 @@
+using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PhotoAiBackend.Models;
 using PhotoAiBackend.Persistance;
 using PhotoAiBackend.Persistance.Entities;
 using PhotoAiBackend.Services;
@@ -32,6 +34,44 @@ public class StabilityAiController : ControllerBase
         {
             file.CopyTo(ms);
             return ms.ToArray();
+        }
+    }
+
+    [HttpPost("test-notification")]
+    public async Task<IActionResult> TestNotification([FromQuery] Guid userId)
+    {
+        try
+        {
+            var foundUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            
+            if (foundUser != null)
+            {
+                var notificationData = new Dictionary<string, string>
+                {
+                    { "type", GenerationType.Filter.ToString() },
+                    { "jobId", 234234.ToString() }
+                };
+                
+                IReadOnlyDictionary<string, string> readOnlyData = new ReadOnlyDictionary<string, string>(notificationData);
+                
+                var notification = new NotificationInfo
+                {
+                    Title = "Background Removed!",
+                    Text = "Your image background has been successfully removed. Tap to view the result."
+                };
+                
+                await _notificationService.SendNotificatino(foundUser.FcmTokenId, notification, readOnlyData);
+                
+                return Ok("Notification Received");
+            }
+            else
+            {
+                return NotFound("User Not Found");
+            }
+        }
+        catch (Exception e)
+        {
+            return StatusCode((int)HttpStatusCode.InternalServerError, e.Message);
         }
     }
     
